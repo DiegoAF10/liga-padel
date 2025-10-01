@@ -1,0 +1,4623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liga de Pádel - Sistema de Ranking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2E7D32;
+            --primary-dark: #1B5E20;
+            --secondary: #FF6F00;
+            --accent: #FFC107;
+            --bg-light: #F5F5F5;
+            --bg-white: #FFFFFF;
+            --text-dark: #212121;
+            --text-light: #757575;
+            --border: #E0E0E0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --error: #F44336;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        body.dark-mode {
+            --bg-light: #121212;
+            --bg-white: #1E1E1E;
+            --text-dark: #FFFFFF;
+            --text-light: #B0B0B0;
+            --border: #333333;
+            --shadow: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .season-selector {
+            padding: 0.5rem 1rem;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--bg-white);
+            box-shadow: 0 2px 5px var(--shadow);
+            position: sticky;
+            top: 75px;
+            z-index: 999;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .nav-item:hover {
+            background: var(--bg-light);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-white);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #E65100;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            float: right;
+            margin-top: -1rem;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-gold {
+            background: #FFD700;
+            color: #000;
+        }
+
+        .badge-silver {
+            background: #C0C0C0;
+            color: #000;
+        }
+
+        .badge-bronze {
+            background: #CD7F32;
+            color: #fff;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-info {
+            background: #E3F2FD;
+            color: #1565C0;
+            border-left: 4px solid #1565C0;
+        }
+
+        .alert-success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .alert-warning {
+            background: #FFF3E0;
+            color: #E65100;
+            border-left: 4px solid #E65100;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            margin-top: 3rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-white);
+            border-radius: 10px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--error);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-error {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #D32F2F;
+        }
+
+        .btn-cancel {
+            background: var(--text-light);
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #616161;
+        }
+
+        /* Action buttons in table */
+        .action-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .action-btn-edit {
+            background: #2196F3;
+            color: white;
+        }
+
+        .action-btn-edit:hover {
+            background: #1976D2;
+        }
+
+        .action-btn-delete {
+            background: var(--error);
+            color: white;
+        }
+
+        .action-btn-delete:hover {
+            background: #D32F2F;
+        }
+
+        .action-btn-toggle {
+            background: var(--warning);
+            color: white;
+        }
+
+        .action-btn-toggle:hover {
+            background: #F57C00;
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        /* Wizard Styles */
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .wizard-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .wizard-step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-light);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .wizard-step.active .wizard-step-number {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .wizard-step.completed .wizard-step-number {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .wizard-step-label {
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .wizard-step.active .wizard-step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .wizard-content {
+            min-height: 300px;
+        }
+
+        .wizard-panel {
+            display: none;
+        }
+
+        .wizard-panel.active {
+            display: block;
+        }
+
+        /* Tournament cards */
+        .tournament-card {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tournament-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .tournament-card.selected {
+            border-color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .tournament-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Player selection */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .player-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .player-checkbox:hover {
+            border-color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .player-checkbox input[type="checkbox"] {
+            margin-right: 0.5rem;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .player-checkbox.selected {
+            border-color: var(--primary);
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        /* Pair formation */
+        .pairs-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .pair-card {
+            background: var(--bg-light);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .pair-header {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .pair-players {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .pair-player-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            background: var(--bg-white);
+        }
+
+        .available-players {
+            background: var(--bg-light);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .available-players-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .player-tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Ranking badges */
+        .rank-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        /* Match card */
+        .match-card {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .match-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .match-card.completed {
+            border-left: 4px solid var(--success);
+        }
+
+        .match-card.walkover {
+            border-left: 4px solid var(--warning);
+            background: rgba(255, 152, 0, 0.05);
+        }
+
+        .match-card.pending {
+            border-left: 4px solid var(--text-light);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .match-teams {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .match-team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 5px;
+            background: var(--bg-light);
+        }
+
+        .match-team.winner {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid var(--success);
+        }
+
+        .match-score {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .week-section, .group-section {
+            margin-bottom: 2rem;
+        }
+
+        .week-header, .group-header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .group-header {
+            background: linear-gradient(135deg, #FF6F00 0%, #E65100 100%);
+        }
+
+        .week-progress {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Set input */
+        .set-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .set-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .set-input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .set-input {
+            width: 60px;
+            padding: 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .set-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        /* Checkbox group */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Bracket styles */
+        .bracket-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: var(--bg-light);
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .bracket-round {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 200px;
+        }
+
+        .bracket-match {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bracket-match.completed {
+            border-color: var(--success);
+        }
+
+        .bracket-team {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 5px;
+            background: var(--bg-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bracket-team.winner {
+            background: rgba(76, 175, 80, 0.2);
+            font-weight: bold;
+        }
+
+        .bracket-score {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .standings-qualified {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid var(--success);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🎾</span>
+                <div>
+                    <div>Liga de Pádel</div>
+                    <div style="font-size: 0.8rem; opacity: 0.9;">Sistema de Ranking Individual</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <select class="season-selector" id="seasonSelector">
+                    <option value="2025">Temporada 2025</option>
+                </select>
+                <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-item active" data-section="dashboard">📊 Dashboard</div>
+            <div class="nav-item" data-section="players">👥 Jugadores</div>
+            <div class="nav-item" data-section="tournament">🏆 Torneo Actual</div>
+            <div class="nav-item" data-section="calendar">📅 Calendario</div>
+            <div class="nav-item" data-section="standings">📋 Tabla de Posiciones</div>
+            <div class="nav-item" data-section="playoffs">🥇 Playoffs</div>
+            <div class="nav-item" data-section="ranking">⭐ Ranking Individual</div>
+            <div class="nav-item" data-section="penalties">⚠️ Penalizaciones</div>
+            <div class="nav-item" data-section="criteria">📖 Criterios del Ranking</div>
+            <div class="nav-item" data-section="data">💾 Datos</div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <div>
+                    <strong>Bienvenido al Sistema de Gestión de Liga de Pádel</strong><br>
+                    Sistema cargado correctamente. Temporada: <strong id="currentSeason">2025</strong> | 
+                    Jugadores registrados: <strong id="totalPlayers">16</strong>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">👥</span>
+                    <div class="stat-label">Jugadores Activos</div>
+                    <div class="stat-value" id="statPlayers">16</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #FF6F00 0%, #E65100 100%);">
+                    <span class="stat-icon">🏆</span>
+                    <div class="stat-label">Torneos Completados</div>
+                    <div class="stat-value" id="statTournaments">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);">
+                    <span class="stat-icon">⚡</span>
+                    <div class="stat-label">Partidos Jugados</div>
+                    <div class="stat-value" id="statMatches">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);">
+                    <span class="stat-icon">📈</span>
+                    <div class="stat-label">Líder del Ranking</div>
+                    <div class="stat-value" style="font-size: 1.5rem;" id="statLeader">-</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Top 5 - Ranking Individual</h2>
+                    <button class="btn btn-outline" onclick="showSection('ranking')">Ver Ranking Completo</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Jugador</th>
+                                <th>Puntos</th>
+                                <th>Títulos</th>
+                                <th>V-D</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topPlayersTable">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                                    No hay datos de ranking disponibles aún
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Estado del Torneo Actual</h2>
+                </div>
+                <div id="currentTournamentStatus">
+                    <p style="color: var(--text-light); text-align: center; padding: 2rem;">
+                        No hay torneo activo en este momento
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Players Section -->
+        <section id="players" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Gestión de Jugadores</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="text" id="playerSearch" placeholder="🔍 Buscar jugador..." 
+                               style="padding: 0.75rem; border: 2px solid var(--border); border-radius: 5px; width: 250px;">
+                        <button class="btn btn-primary" onclick="openPlayerModal()">
+                            ➕ Agregar Jugador
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Ranking</th>
+                                <th>Partidos</th>
+                                <th>V-D</th>
+                                <th>Títulos</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tournament Section -->
+        <section id="tournament" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Gestión de Torneos</h2>
+                    <button class="btn btn-primary" onclick="openTournamentWizard()">
+                        ➕ Crear Nuevo Torneo
+                    </button>
+                </div>
+                <div id="tournamentsList"></div>
+            </div>
+        </section>
+
+        <section id="calendar" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Calendario de Partidos</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <select id="calendarTournamentSelect" class="form-input" style="width: 250px;" onchange="renderCalendar()">
+                            <option value="">Seleccionar torneo...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="generateFixture()">⚡ Generar Fixture</button>
+                    </div>
+                </div>
+                <div id="calendarContent"></div>
+            </div>
+        </section>
+
+        <section id="standings" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Tabla de Posiciones</h2>
+                    <select id="standingsTournamentSelect" class="form-input" style="width: 250px;" onchange="renderStandings()">
+                        <option value="">Seleccionar torneo...</option>
+                    </select>
+                </div>
+                <div id="standingsContent"></div>
+            </div>
+        </section>
+
+        <section id="playoffs" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Playoffs</h2>
+                    <select id="playoffsTournamentSelect" class="form-input" style="width: 250px;" onchange="renderPlayoffs()">
+                        <option value="">Seleccionar torneo...</option>
+                    </select>
+                </div>
+                <div id="playoffsContent"></div>
+            </div>
+        </section>
+
+        <section id="ranking" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Ranking Individual</h2>
+                    <button class="btn btn-outline" onclick="recalculateAllRankings()">🔄 Recalcular Rankings</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Jugador</th>
+                                <th>Puntos</th>
+                                <th>Torneos</th>
+                                <th>Títulos</th>
+                                <th>Subcampeonatos</th>
+                                <th>V-D</th>
+                                <th>% Victoria</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Ranking de Parejas Actuales (Informativo)</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Pareja</th>
+                                <th>Promedio</th>
+                                <th>Jugador 1</th>
+                                <th>Jugador 2</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pairsRankingTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="penalties" class="section">
+            <div class="card">
+                <h2 class="card-title">Penalizaciones</h2>
+                <p style="color: var(--text-light);">Funcionalidad disponible en módulos posteriores</p>
+            </div>
+        </section>
+
+        <section id="criteria" class="section">
+            <div class="card">
+                <h2 class="card-title">📖 Criterios del Sistema de Ranking Individual</h2>
+                <div class="alert alert-info" style="margin-bottom: 2rem;">
+                    <span>ℹ️</span>
+                    <div>
+                        <strong>Sistema de Ranking Individual por Jugador</strong><br>
+                        Cada jugador construye su propio ranking a través de múltiples torneos, permitiendo libertad para cambiar de pareja sin perder progreso.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fórmula Principal -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">🧮 Fórmula Completa del Ranking</h3>
+                <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <div style="font-family: monospace; font-size: 1.1rem; margin-bottom: 1rem;">
+                        <strong>RANKING TOTAL =</strong> Σ (Puntos de cada Torneo × Decaimiento)
+                    </div>
+                    <div style="font-family: monospace; font-size: 0.95rem; color: var(--text-light); margin-left: 2rem;">
+                        Puntos por Torneo = (Base × Peso × Multiplicador) + Victorias + Bonos - Penalizaciones
+                    </div>
+                </div>
+            </div>
+
+            <!-- Puntos Base -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">🏆 Puntos Base por Posición Final</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                    <div style="background: var(--bg-light); padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem;">Liga Regular (8 parejas)</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.25rem 0;">🥇 1º: <strong>1,000 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">🥈 2º: <strong>700 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">🥉 3º-4º: <strong>500 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">📊 5º-6º: <strong>300 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">📊 7º-8º: <strong>150 pts</strong></li>
+                        </ul>
+                    </div>
+                    <div style="background: var(--bg-light); padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem;">Copa/Torneo (8 parejas)</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.25rem 0;">🥇 1º: <strong>700 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">🥈 2º: <strong>490 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">🥉 3º-4º: <strong>350 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">📊 5º-8º: <strong>210 pts</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; color: var(--text-light); font-size: 0.9rem;">
+                    * Los puntos varían según el número de parejas participantes
+                </p>
+            </div>
+
+            <!-- Multiplicadores -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">⚖️ Pesos y Multiplicadores</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem;">🏆 Liga Regular</h4>
+                        <div style="font-size: 2rem; font-weight: bold;">1.0x</div>
+                        <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">Peso estándar</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #FF6F00 0%, #E65100 100%); color: white; padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem;">🏅 Copa Express</h4>
+                        <div style="font-size: 2rem; font-weight: bold;">0.7x</div>
+                        <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">Formato reducido</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: white; padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem;">⭐ Campeonato Especial</h4>
+                        <div style="font-size: 2rem; font-weight: bold;">1.5x</div>
+                        <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">Mayor prestigio</p>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; background: var(--bg-light); padding: 1rem; border-radius: 8px;">
+                    <h4>Multiplicador de Rendimiento</h4>
+                    <p style="margin: 0.5rem 0; color: var(--text-light);">
+                        Multiplicador = 1.0 + (Victorias / Total de Partidos × 0.3)
+                    </p>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin: 0;">
+                        Ejemplo: 8 victorias de 9 partidos = 1.0 + (8/9 × 0.3) = <strong>1.267x</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Puntos por Victoria -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">⚡ Puntos por Victoria</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tipo de Partido</th>
+                                <th>Puntos por Jugador</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Fase Regular</strong></td>
+                                <td><span style="color: var(--primary); font-weight: bold;">30 pts</span></td>
+                                <td>Partidos de liga regular</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ronda Preliminar</strong></td>
+                                <td><span style="color: var(--primary); font-weight: bold;">50 pts</span></td>
+                                <td>Playoffs - Primera ronda</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Semifinal</strong></td>
+                                <td><span style="color: var(--primary); font-weight: bold;">75 pts</span></td>
+                                <td>Partidos de semifinales</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Final</strong></td>
+                                <td><span style="color: var(--primary); font-weight: bold;">100 pts</span></td>
+                                <td>Partido de final del torneo</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Copa - Eliminación</strong></td>
+                                <td><span style="color: var(--primary); font-weight: bold;">40 pts</span></td>
+                                <td>Partidos de copa express</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Amistoso Registrado</strong></td>
+                                <td><span style="color: var(--primary); font-weight: bold;">10 pts</span></td>
+                                <td>Partidos amistosos</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bonificaciones -->
+            <div class="card">
+                <h3 style="color: var(--success); margin-bottom: 1rem;">🎁 Bonificaciones Individuales</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                    <div style="border: 2px solid var(--success); padding: 1rem; border-radius: 8px;">
+                        <h4 style="color: var(--success); margin-bottom: 0.5rem;">🔥 Bonus por Racha</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.25rem 0;">✓ 5 victorias consecutivas: <strong>+50 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">✓ 7+ victorias consecutivas: <strong>+100 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">✓ Torneo invicto (sin perder sets): <strong>+200 pts</strong></li>
+                        </ul>
+                    </div>
+                    <div style="border: 2px solid var(--success); padding: 1rem; border-radius: 8px;">
+                        <h4 style="color: var(--success); margin-bottom: 0.5rem;">⭐ Bonus Especiales</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.25rem 0;">✓ MVP del Torneo: <strong>+150 pts</strong></li>
+                        </ul>
+                    </div>
+                    <div style="border: 2px solid var(--success); padding: 1rem; border-radius: 8px;">
+                        <h4 style="color: var(--success); margin-bottom: 0.5rem;">🔄 Bonus por Versatilidad</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.25rem 0;">✓ Ganar con 2 parejas (mismo año): <strong>+200 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">✓ Ganar con 3+ parejas (histórico): <strong>+500 pts</strong></li>
+                            <li style="padding: 0.25rem 0;">✓ Subcampeón con 2 parejas (año): <strong>+100 pts</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Penalizaciones -->
+            <div class="card">
+                <h3 style="color: var(--error); margin-bottom: 1rem;">⚠️ Penalizaciones Individuales</h3>
+                <div style="border: 2px solid var(--error); padding: 1rem; border-radius: 8px; background: rgba(244, 67, 54, 0.05);">
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                            ✗ Walkover por impuntualidad: <strong style="color: var(--error);">-100 pts</strong>
+                        </li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                            ✗ Descalificación por conducta: <strong style="color: var(--error);">-200 pts</strong>
+                        </li>
+                        <li style="padding: 0.5rem 0;">
+                            ✗ Dos walkovers en un torneo: <strong style="color: var(--error);">-300 pts</strong>
+                        </li>
+                    </ul>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                        * Las penalizaciones se aplican solo al jugador responsable si es identificable, o a ambos si la responsabilidad es compartida.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Decaimiento -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">📉 Sistema de Decaimiento Temporal</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-light);">
+                    Los puntos decaen con el tiempo para mantener el ranking dinámico y reflejar el rendimiento reciente:
+                </p>
+                <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--success);">100%</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">0-12 meses</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">75%</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">12-18 meses</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--warning);">50%</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">18-24 meses</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--error);">25%</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">24-30 meses</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--text-light);">0%</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">30+ meses</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info" style="margin-top: 1rem;">
+                    <span>⭐</span>
+                    <div>
+                        <strong>Torneos Especiales Protegidos:</strong> Los Campeonatos Especiales mantienen el 100% de sus puntos para siempre. No decaen.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ejemplo de Cálculo -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">📊 Ejemplo Completo de Cálculo</h3>
+                <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem;">Frank - Liga 2025 (jugando con Alfredo)</h4>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Posición Final:</strong> 🥇 1º Lugar (Campeón)<br>
+                        <strong>Partidos:</strong> 9 jugados, 8 ganados, 1 perdido
+                    </div>
+
+                    <table style="width: 100%; margin-bottom: 1rem;">
+                        <tr style="background: var(--bg-white);">
+                            <td style="padding: 0.5rem;"><strong>Puntos Base</strong></td>
+                            <td style="padding: 0.5rem;">1,000 pts</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;"><strong>Multiplicador</strong></td>
+                            <td style="padding: 0.5rem;">1.0 + (8/9 × 0.3) = 1.267</td>
+                        </tr>
+                        <tr style="background: var(--bg-white);">
+                            <td style="padding: 0.5rem;"><strong>Peso Liga</strong></td>
+                            <td style="padding: 0.5rem;">1.0x</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;"><strong>Subtotal Posición</strong></td>
+                            <td style="padding: 0.5rem;"><strong>1,267 pts</strong></td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-bottom: 1rem;">
+                        <tr style="background: var(--bg-white);">
+                            <td style="padding: 0.5rem;"><strong>Victorias Fase Regular</strong></td>
+                            <td style="padding: 0.5rem;">6 × 30 = 180 pts</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;"><strong>Victoria Semifinal</strong></td>
+                            <td style="padding: 0.5rem;">1 × 75 = 75 pts</td>
+                        </tr>
+                        <tr style="background: var(--bg-white);">
+                            <td style="padding: 0.5rem;"><strong>Victoria Final</strong></td>
+                            <td style="padding: 0.5rem;">1 × 100 = 100 pts</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;"><strong>Subtotal Victorias</strong></td>
+                            <td style="padding: 0.5rem;"><strong>355 pts</strong></td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-bottom: 1rem;">
+                        <tr style="background: var(--bg-white);">
+                            <td style="padding: 0.5rem;"><strong>Bonus Racha (5 victorias)</strong></td>
+                            <td style="padding: 0.5rem;">+50 pts</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;"><strong>Bonus MVP</strong></td>
+                            <td style="padding: 0.5rem;">+150 pts</td>
+                        </tr>
+                        <tr style="background: var(--bg-white);">
+                            <td style="padding: 0.5rem;"><strong>Subtotal Bonificaciones</strong></td>
+                            <td style="padding: 0.5rem;"><strong>200 pts</strong></td>
+                        </tr>
+                    </table>
+
+                    <div style="background: var(--primary); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">TOTAL FRANK</div>
+                        <div style="font-size: 2.5rem; font-weight: bold;">1,822 puntos</div>
+                        <div style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">1,267 + 355 + 200</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventajas del Sistema -->
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">✨ Ventajas del Sistema Individual</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div style="padding: 1rem; border-left: 4px solid var(--success); background: var(--bg-light);">
+                        <strong>🔄 Libertad de Pareja</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-light); font-size: 0.9rem;">
+                            Cambia de pareja sin perder tu progreso en el ranking
+                        </p>
+                    </div>
+                    <div style="padding: 1rem; border-left: 4px solid var(--success); background: var(--bg-light);">
+                        <strong>📈 Meritocracia</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-light); font-size: 0.9rem;">
+                            Quien juega mejor, sube más en el ranking
+                        </p>
+                    </div>
+                    <div style="padding: 1rem; border-left: 4px solid var(--success); background: var(--bg-light);">
+                        <strong>🎯 Versatilidad</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-light); font-size: 0.9rem;">
+                            Bonus por ganar con diferentes compañeros
+                        </p>
+                    </div>
+                    <div style="padding: 1rem; border-left: 4px solid var(--success); background: var(--bg-light);">
+                        <strong>⚡ Dinamismo</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-light); font-size: 0.9rem;">
+                            El ranking refleja tu rendimiento reciente
+                        </p>
+                    </div>
+                    <div style="padding: 1rem; border-left: 4px solid var(--success); background: var(--bg-light);">
+                        <strong>🔍 Transparencia</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-light); font-size: 0.9rem;">
+                            Todo cálculo es auditable y verificable
+                        </p>
+                    </div>
+                    <div style="padding: 1rem; border-left: 4px solid var(--success); background: var(--bg-light);">
+                        <strong>📊 Escalabilidad</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-light); font-size: 0.9rem;">
+                            Soporta crecimiento ilimitado de jugadores
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="data" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Gestión de Datos</h2>
+                </div>
+
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    <div>
+                        Desde aquí puedes exportar, importar o eliminar todos los datos del sistema.
+                        <strong>¡Ten cuidado con las opciones de borrado!</strong>
+                    </div>
+                </div>
+
+                <!-- Estado Actual -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Estado Actual del Sistema</h3>
+                    <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 5px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <div style="color: var(--text-light); font-size: 0.9rem;">Temporada Actual</div>
+                                <div style="font-size: 1.5rem; font-weight: bold;" id="dataCurrentSeason">-</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-light); font-size: 0.9rem;">Jugadores</div>
+                                <div style="font-size: 1.5rem; font-weight: bold;" id="dataPlayerCount">-</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-light); font-size: 0.9rem;">Torneos</div>
+                                <div style="font-size: 1.5rem; font-weight: bold;" id="dataTournamentCount">-</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-light); font-size: 0.9rem;">Tamaño Total</div>
+                                <div style="font-size: 1.5rem; font-weight: bold;" id="dataStorageSize">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exportar/Importar -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Backup y Restauración</h3>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="exportBackup()">
+                            📥 Exportar Backup (JSON)
+                        </button>
+                        <button class="btn btn-outline" onclick="document.getElementById('importBackupFile').click()">
+                            📤 Importar Backup
+                        </button>
+                        <input type="file" id="importBackupFile" accept=".json" style="display: none;" onchange="importBackup(event)">
+                    </div>
+                </div>
+
+                <!-- Borrar Datos -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Opciones de Borrado</h3>
+                    <div class="alert alert-warning">
+                        <span>⚠️</span>
+                        <div>
+                            <strong>¡ADVERTENCIA!</strong> Estas acciones son irreversibles. 
+                            Recomendamos hacer un backup antes de borrar datos.
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <button class="btn" style="background: #FF9800; color: white;" onclick="deleteCurrentSeasonData()">
+                            🗑️ Borrar Datos de Temporada Actual (2025)
+                        </button>
+                        <button class="btn" style="background: #F44336; color: white;" onclick="deleteAllData()">
+                            ⚠️ Borrar TODOS los Datos (Todas las Temporadas)
+                        </button>
+                        <button class="btn btn-danger" onclick="clearAllLocalStorage()">
+                            💣 Limpiar LocalStorage Completo (Incluye Configuraciones)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Liga de Pádel 2025 - Sistema de Ranking Individual v1.0 | Módulo 6 (Copas + Standings + Playoffs)</p>
+    </footer>
+
+    <!-- Player Modal -->
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="playerModalTitle">Agregar Jugador</h3>
+                <button class="modal-close" onclick="closePlayerModal()">✕</button>
+            </div>
+            <form id="playerForm" onsubmit="savePlayer(event)">
+                <div class="form-group">
+                    <label class="form-label">Nombre Completo *</label>
+                    <input type="text" class="form-input" id="playerName" required 
+                           placeholder="Ej: Diego Palencia">
+                    <div class="form-error" id="playerNameError"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closePlayerModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="playerSubmitBtn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tournament Wizard Modal -->
+    <div id="tournamentWizard" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Crear Nuevo Torneo</h3>
+                <button class="modal-close" onclick="closeTournamentWizard()">✕</button>
+            </div>
+
+            <!-- Wizard Steps -->
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">
+                    <div class="wizard-step-number">1</div>
+                    <div class="wizard-step-label">Información</div>
+                </div>
+                <div class="wizard-step" data-step="2">
+                    <div class="wizard-step-number">2</div>
+                    <div class="wizard-step-label">Tipo</div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="wizard-step-number">3</div>
+                    <div class="wizard-step-label">Parejas</div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="wizard-step-number">4</div>
+                    <div class="wizard-step-label">Jugadores</div>
+                </div>
+                <div class="wizard-step" data-step="5">
+                    <div class="wizard-step-number">5</div>
+                    <div class="wizard-step-label">Resumen</div>
+                </div>
+            </div>
+
+            <!-- Wizard Content -->
+            <div class="wizard-content">
+                <!-- Step 1: Basic Info -->
+                <div id="wizardStep1" class="wizard-panel active">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Torneo *</label>
+                        <input type="text" class="form-input" id="tournamentName" 
+                               placeholder="Ej: Liga Octubre 2025">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Inicio *</label>
+                        <input type="date" class="form-input" id="tournamentDate">
+                    </div>
+                </div>
+
+                <!-- Step 2: Tournament Type -->
+                <div id="wizardStep2" class="wizard-panel">
+                    <h4 style="margin-bottom: 1rem;">Selecciona el tipo de torneo</h4>
+                    <div class="tournament-type-grid">
+                        <div class="tournament-card" onclick="selectTournamentType('league')">
+                            <h3>🏆 Liga Regular</h3>
+                            <p style="color: var(--text-light); margin: 0.5rem 0;">Peso: 1.0x</p>
+                            <p style="font-size: 0.9rem;">Todos contra todos + playoffs. Formato estándar de temporada.</p>
+                        </div>
+                        <div class="tournament-card" onclick="selectTournamentType('cup')">
+                            <h3>🏅 Copa Express</h3>
+                            <p style="color: var(--text-light); margin: 0.5rem 0;">Peso: 0.7x</p>
+                            <p style="font-size: 0.9rem;">Grupos + eliminación directa. Formato reducido.</p>
+                        </div>
+                        <div class="tournament-card" onclick="selectTournamentType('special')">
+                            <h3>⭐ Campeonato Especial</h3>
+                            <p style="color: var(--text-light); margin: 0.5rem 0;">Peso: 1.5x</p>
+                            <p style="font-size: 0.9rem;">Evento de mayor prestigio. Puntos no decaen.</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="tournamentType">
+
+                    <!-- Rounds selection (for both leagues and cups) -->
+                    <div id="roundsSelectionSection" style="display: none; margin-top: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;">¿Cuántas vueltas?</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="tournament-card" onclick="selectRounds(1)">
+                                <h3>1 Vuelta</h3>
+                                <p style="font-size: 0.9rem;">Cada pareja juega 1 vez contra cada rival</p>
+                            </div>
+                            <div class="tournament-card" onclick="selectRounds(2)">
+                                <h3>2 Vueltas</h3>
+                                <p style="font-size: 0.9rem;">Ida y vuelta - cada pareja juega 2 veces contra cada rival</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tournamentRounds">
+                    </div>
+                </div>
+
+                <!-- Step 3: Number of Pairs -->
+                <div id="wizardStep3" class="wizard-panel">
+                    <h4 style="margin-bottom: 1rem;">¿Cuántas parejas participarán?</h4>
+                    <div class="tournament-type-grid">
+                        <div class="tournament-card" onclick="selectPairCount(4)">
+                            <h3>4 Parejas</h3>
+                            <p style="color: var(--text-light);">8 jugadores</p>
+                        </div>
+                        <div class="tournament-card" onclick="selectPairCount(6)">
+                            <h3>6 Parejas</h3>
+                            <p style="color: var(--text-light);">12 jugadores</p>
+                        </div>
+                        <div class="tournament-card" onclick="selectPairCount(8)">
+                            <h3>8 Parejas</h3>
+                            <p style="color: var(--text-light);">16 jugadores</p>
+                        </div>
+                        <div class="tournament-card" onclick="selectPairCount(10)">
+                            <h3>10 Parejas</h3>
+                            <p style="color: var(--text-light);">20 jugadores</p>
+                        </div>
+                        <div class="tournament-card" onclick="selectPairCount(12)">
+                            <h3>12 Parejas</h3>
+                            <p style="color: var(--text-light);">24 jugadores</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="pairCount">
+                </div>
+
+                <!-- Step 4: Select Players -->
+                <div id="wizardStep4" class="wizard-panel">
+                    <h4 style="margin-bottom: 1rem;">Selecciona los jugadores participantes</h4>
+                    <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span id="selectedPlayerCount">0</span> / <span id="requiredPlayerCount">0</span> jugadores seleccionados
+                        </div>
+                        <button type="button" class="btn btn-outline" onclick="selectAllPlayers()">✓ Seleccionar Todos</button>
+                    </div>
+                    <div class="player-grid" id="playerSelectionGrid"></div>
+                </div>
+
+                <!-- Step 5: Form Pairs -->
+                <div id="wizardStep5" class="wizard-panel">
+                    <h4 style="margin-bottom: 1rem;">Forma las parejas</h4>
+                    <div style="margin-bottom: 1rem;">
+                        <button type="button" class="btn btn-outline" onclick="repeatLastTournamentPairs()">🔄 Repetir Parejas del Último Torneo</button>
+                    </div>
+                    <div class="pairs-container" id="pairsFormation"></div>
+                </div>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel" id="wizardPrevBtn" onclick="previousWizardStep()" style="display: none;">
+                    ← Anterior
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeTournamentWizard()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="wizardNextBtn" onclick="nextWizardStep()">
+                    Siguiente →
+                </button>
+                <button type="button" class="btn btn-primary" id="wizardFinishBtn" onclick="finishTournamentCreation()" style="display: none;">
+                    Crear Torneo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Result Modal -->
+    <div id="matchResultModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Resultado del Partido</h3>
+                <button class="modal-close" onclick="closeMatchResultModal()">✕</button>
+            </div>
+
+            <div id="matchInfo" style="margin-bottom: 1.5rem;"></div>
+
+            <!-- Walkover Option -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="isWalkover" onchange="toggleWalkoverMode()">
+                <label for="isWalkover" style="cursor: pointer; user-select: none;">
+                    <strong>Este partido fue walkover (W.O.)</strong>
+                </label>
+            </div>
+
+            <!-- Normal Match Result -->
+            <div id="normalMatchSection">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isIncompleteMatch">
+                    <label for="isIncompleteMatch" style="cursor: pointer; user-select: none;">
+                        Partido incompleto por tiempo
+                    </label>
+                </div>
+
+                <h4 style="margin-bottom: 1rem;">Ingresa el resultado set por set</h4>
+                
+                <div class="set-inputs">
+                    <div class="set-input-group">
+                        <label class="form-label">Set 1 *</label>
+                        <div class="set-input-row">
+                            <input type="number" class="set-input" id="set1Team1" min="0" max="7" placeholder="0">
+                            <div class="vs-divider">-</div>
+                            <input type="number" class="set-input" id="set1Team2" min="0" max="7" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="set-input-group">
+                        <label class="form-label">Set 2 *</label>
+                        <div class="set-input-row">
+                            <input type="number" class="set-input" id="set2Team1" min="0" max="7" placeholder="0">
+                            <div class="vs-divider">-</div>
+                            <input type="number" class="set-input" id="set2Team2" min="0" max="7" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="set-input-group">
+                        <label class="form-label">Set 3 (si aplica)</label>
+                        <div class="set-input-row">
+                            <input type="number" class="set-input" id="set3Team1" min="0" max="7" placeholder="0">
+                            <div class="vs-divider">-</div>
+                            <input type="number" class="set-input" id="set3Team2" min="0" max="7" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-error" id="matchResultError" style="display: none; margin-top: 1rem;"></div>
+            </div>
+
+            <!-- Walkover Section -->
+            <div id="walkoverSection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Pareja que ganó por W.O. *</label>
+                    <select class="form-input" id="walkoverWinner">
+                        <option value="">Seleccionar...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Razón del Walkover *</label>
+                    <select class="form-input" id="walkoverReason" onchange="toggleCustomReason()">
+                        <option value="">Seleccionar...</option>
+                        <option value="late_5_14">Atraso 5-14 minutos</option>
+                        <option value="late_15_plus">Atraso 15+ minutos</option>
+                        <option value="no_show">No se presentó</option>
+                        <option value="injury">Lesión</option>
+                        <option value="other">Otra razón</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="customReasonGroup" style="display: none;">
+                    <label class="form-label">Descripción de la razón</label>
+                    <textarea class="form-input" id="customReason" rows="3" placeholder="Describe la razón del walkover..."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeMatchResultModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveMatchResult()">Guardar Resultado</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DATA STRUCTURE & INITIALIZATION
+        // ============================================
+
+        const STORAGE_KEY = 'padelLeagueData';
+        const CURRENT_SEASON = '2025';
+
+        function getDefaultData() {
+            return {
+                version: '1.0',
+                currentSeason: CURRENT_SEASON,
+                seasons: {
+                    '2025': {
+                        players: [
+                            { id: 'p1', name: 'Puppo', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p2', name: 'Calush', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p3', name: 'Gilmar', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p4', name: 'David', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p5', name: 'Almazán', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p6', name: 'Calderón', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p7', name: 'Martín', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p8', name: 'Mark', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p9', name: 'Alfredo', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p10', name: 'Frank', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p11', name: 'Diego', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p12', name: 'JD', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p13', name: 'Jose', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p14', name: 'Joshua', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p15', name: 'Christian', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true },
+                            { id: 'p16', name: 'Sebas', rankingPoints: 0, tournaments: [], totalWins: 0, totalLosses: 0, titles: 0, runnerUps: 0, active: true }
+                        ],
+                        tournaments: []
+                    }
+                }
+            };
+        }
+
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch (e) {
+                    console.error('Error parsing stored data:', e);
+                    return getDefaultData();
+                }
+            }
+            return getDefaultData();
+        }
+
+        function saveData(data) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.error('Error saving data:', e);
+                alert('Error al guardar datos. El almacenamiento puede estar lleno.');
+                return false;
+            }
+        }
+
+        let appData = loadData();
+
+        // ============================================
+        // NAVIGATION
+        // ============================================
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('active');
+            }
+
+            const navItem = document.querySelector(`[data-section="${sectionId}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+
+            refreshCurrentSection(sectionId);
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const section = item.getAttribute('data-section');
+                showSection(section);
+            });
+        });
+
+        // ============================================
+        // THEME TOGGLE
+        // ============================================
+
+        const themeToggle = document.getElementById('themeToggle');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        function applyTheme() {
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.textContent = '🌙';
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode);
+            applyTheme();
+        });
+
+        applyTheme();
+
+        // ============================================
+        // RENDER FUNCTIONS
+        // ============================================
+
+        function refreshCurrentSection(sectionId) {
+            switch(sectionId) {
+                case 'dashboard':
+                    renderDashboard();
+                    break;
+                case 'players':
+                    renderPlayersTable();
+                    break;
+                case 'tournament':
+                    renderTournamentsList();
+                    break;
+                case 'ranking':
+                    renderRankingTable();
+                    renderPairsRankingTable();
+                    break;
+                case 'calendar':
+                    populateCalendarTournamentSelect();
+                    renderCalendar();
+                    break;
+                case 'standings':
+                    populateStandingsTournamentSelect();
+                    renderStandings();
+                    break;
+                case 'playoffs':
+                    populatePlayoffsTournamentSelect();
+                    renderPlayoffs();
+                    break;
+                case 'data':
+                    updateDataDashboard();
+                    break;
+            }
+        }
+
+        function renderDashboard() {
+            const season = appData.seasons[appData.currentSeason];
+            
+            document.getElementById('statPlayers').textContent = season.players.filter(p => p.active).length;
+            document.getElementById('statTournaments').textContent = season.tournaments.filter(t => t.status === 'completed').length;
+            
+            let totalMatches = 0;
+            season.tournaments.forEach(t => {
+                if (t.matches) {
+                    totalMatches += t.matches.filter(m => m.status === 'completed' || m.status === 'walkover').length;
+                }
+            });
+            document.getElementById('statMatches').textContent = totalMatches;
+
+            const sortedPlayers = [...season.players].sort((a, b) => b.rankingPoints - a.rankingPoints);
+            document.getElementById('statLeader').textContent = sortedPlayers[0] && sortedPlayers[0].rankingPoints > 0 
+                ? sortedPlayers[0].name 
+                : '-';
+
+            renderTopPlayers();
+        }
+
+        function renderTopPlayers() {
+            const season = appData.seasons[appData.currentSeason];
+            const sortedPlayers = [...season.players].sort((a, b) => b.rankingPoints - a.rankingPoints);
+            const top5 = sortedPlayers.slice(0, 5);
+
+            const tbody = document.getElementById('topPlayersTable');
+            
+            if (top5.length === 0 || top5[0].rankingPoints === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-light);">No hay datos de ranking disponibles aún</td></tr>';
+                return;
+            }
+
+            let html = '';
+            top5.forEach((player, index) => {
+                const badge = index === 0 ? '<span class="badge badge-gold">👑</span>' :
+                             index === 1 ? '<span class="badge badge-silver">🥈</span>' :
+                             index === 2 ? '<span class="badge badge-bronze">🥉</span>' : '';
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${player.name} ${badge}</td>
+                        <td><strong>${player.rankingPoints.toLocaleString()}</strong></td>
+                        <td>${player.titles}</td>
+                        <td>${player.totalWins}-${player.totalLosses}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function renderPlayersTable() {
+            const season = appData.seasons[appData.currentSeason];
+            const tbody = document.getElementById('playersTable');
+            const searchTerm = document.getElementById('playerSearch') ? document.getElementById('playerSearch').value.toLowerCase() : '';
+
+            const filteredPlayers = season.players.filter(player => 
+                player.name.toLowerCase().includes(searchTerm)
+            );
+
+            const sortedPlayers = [...filteredPlayers].sort((a, b) => b.rankingPoints - a.rankingPoints);
+
+            if (sortedPlayers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-light);">No se encontraron jugadores</td></tr>';
+                return;
+            }
+
+            let html = '';
+            sortedPlayers.forEach(player => {
+                const statusBadge = player.active 
+                    ? '<span class="badge" style="background: #4CAF50; color: white;">Activo</span>'
+                    : '<span class="badge" style="background: #9E9E9E; color: white;">Inactivo</span>';
+
+                const toggleBtn = player.active
+                    ? '<button class="action-btn action-btn-toggle" onclick="togglePlayerStatus(\'' + player.id + '\')">Desactivar</button>'
+                    : '<button class="action-btn action-btn-toggle" onclick="togglePlayerStatus(\'' + player.id + '\')">Activar</button>';
+
+                html += '<tr>';
+                html += '<td><strong>' + player.name + '</strong></td>';
+                html += '<td>' + player.rankingPoints.toLocaleString() + ' pts</td>';
+                html += '<td>' + (player.totalWins + player.totalLosses) + '</td>';
+                html += '<td>' + player.totalWins + '-' + player.totalLosses + '</td>';
+                html += '<td>' + player.titles + '</td>';
+                html += '<td>' + statusBadge + '</td>';
+                html += '<td>';
+                html += '<button class="action-btn action-btn-edit" onclick="editPlayer(\'' + player.id + '\')">✏️ Editar</button>';
+                html += toggleBtn;
+                html += '<button class="action-btn action-btn-delete" onclick="deletePlayer(\'' + player.id + '\')">🗑️ Eliminar</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // ============================================
+        // PLAYER MANAGEMENT (MODULE 2)
+        // ============================================
+
+        let currentEditingPlayerId = null;
+
+        function openPlayerModal(playerId = null) {
+            const modal = document.getElementById('playerModal');
+            const modalTitle = document.getElementById('playerModalTitle');
+            const playerName = document.getElementById('playerName');
+            const submitBtn = document.getElementById('playerSubmitBtn');
+
+            if (playerId) {
+                const season = appData.seasons[appData.currentSeason];
+                const player = season.players.find(p => p.id === playerId);
+                
+                if (player) {
+                    currentEditingPlayerId = playerId;
+                    modalTitle.textContent = 'Editar Jugador';
+                    playerName.value = player.name;
+                    submitBtn.textContent = 'Actualizar';
+                }
+            } else {
+                currentEditingPlayerId = null;
+                modalTitle.textContent = 'Agregar Jugador';
+                playerName.value = '';
+                submitBtn.textContent = 'Guardar';
+            }
+
+            document.getElementById('playerNameError').style.display = 'none';
+            modal.classList.add('active');
+        }
+
+        function closePlayerModal() {
+            const modal = document.getElementById('playerModal');
+            modal.classList.remove('active');
+            document.getElementById('playerForm').reset();
+            currentEditingPlayerId = null;
+        }
+
+        function savePlayer(event) {
+            event.preventDefault();
+            
+            const playerName = document.getElementById('playerName').value.trim();
+            const errorDiv = document.getElementById('playerNameError');
+            
+            if (!playerName) {
+                errorDiv.textContent = 'El nombre es obligatorio';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const season = appData.seasons[appData.currentSeason];
+
+            const duplicatePlayer = season.players.find(p => 
+                p.name.toLowerCase() === playerName.toLowerCase() && 
+                p.id !== currentEditingPlayerId
+            );
+
+            if (duplicatePlayer) {
+                errorDiv.textContent = 'Ya existe un jugador con este nombre';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (currentEditingPlayerId) {
+                const player = season.players.find(p => p.id === currentEditingPlayerId);
+                if (player) {
+                    player.name = playerName;
+                    showNotification('Jugador actualizado correctamente', 'success');
+                }
+            } else {
+                const newPlayer = {
+                    id: 'p' + Date.now(),
+                    name: playerName,
+                    rankingPoints: 0,
+                    tournaments: [],
+                    totalWins: 0,
+                    totalLosses: 0,
+                    titles: 0,
+                    runnerUps: 0,
+                    active: true
+                };
+
+                season.players.push(newPlayer);
+                showNotification('Jugador agregado correctamente', 'success');
+            }
+
+            saveData(appData);
+            closePlayerModal();
+            renderPlayersTable();
+            renderDashboard();
+        }
+
+        function editPlayer(playerId) {
+            openPlayerModal(playerId);
+        }
+
+        function deletePlayer(playerId) {
+            const season = appData.seasons[appData.currentSeason];
+            const player = season.players.find(p => p.id === playerId);
+            
+            if (!player) return;
+
+            if (confirm('¿Estás seguro de que deseas eliminar a ' + player.name + '?\n\nEsta acción eliminará todos sus datos históricos y no se puede deshacer.')) {
+                season.players = season.players.filter(p => p.id !== playerId);
+
+                season.tournaments.forEach(tournament => {
+                    if (tournament.pairs) {
+                        tournament.pairs = tournament.pairs.filter(pair => 
+                            !pair.players.includes(playerId)
+                        );
+                    }
+
+                    if (tournament.matches) {
+                        tournament.matches = tournament.matches.filter(match => {
+                            const pair1Players = match.pair1Players || [];
+                            const pair2Players = match.pair2Players || [];
+                            return !pair1Players.includes(playerId) && !pair2Players.includes(playerId);
+                        });
+                    }
+                });
+
+                saveData(appData);
+                renderPlayersTable();
+                renderDashboard();
+                
+                showNotification('Jugador eliminado correctamente', 'success');
+            }
+        }
+
+        function togglePlayerStatus(playerId) {
+            const season = appData.seasons[appData.currentSeason];
+            const player = season.players.find(p => p.id === playerId);
+            
+            if (!player) return;
+
+            player.active = !player.active;
+            
+            saveData(appData);
+            renderPlayersTable();
+            renderDashboard();
+            
+            const status = player.active ? 'activado' : 'desactivado';
+            showNotification('Jugador ' + status + ' correctamente', 'success');
+        }
+
+        if (document.getElementById('playerSearch')) {
+            document.getElementById('playerSearch').addEventListener('input', () => {
+                renderPlayersTable();
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-' + type;
+            notification.style.position = 'fixed';
+            notification.style.top = '100px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '10001';
+            notification.style.minWidth = '300px';
+            notification.style.animation = 'slideInRight 0.3s';
+            
+            const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            notification.innerHTML = '<span>' + icon + '</span><div>' + message + '</div>';
+            
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // ============================================
+        // TOURNAMENT WIZARD (MODULE 3)
+        // ============================================
+
+        let wizardCurrentStep = 1;
+        let wizardData = {
+            name: '',
+            date: '',
+            type: '',
+            weight: 1.0,
+            rounds: 1,
+            pairCount: 0,
+            selectedPlayers: [],
+            pairs: [],
+            groups: []
+        };
+
+        function openTournamentWizard() {
+            wizardCurrentStep = 1;
+            wizardData = {
+                name: '',
+                date: '',
+                type: '',
+                weight: 1.0,
+                rounds: 1,
+                pairCount: 0,
+                selectedPlayers: [],
+                pairs: [],
+                groups: []
+            };
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tournamentDate').value = today;
+
+            document.getElementById('roundsSelectionSection').style.display = 'none';
+
+            document.getElementById('tournamentWizard').classList.add('active');
+            updateWizardStep(1);
+        }
+
+        function closeTournamentWizard() {
+            document.getElementById('tournamentWizard').classList.remove('active');
+        }
+
+        function updateWizardStep(step) {
+            wizardCurrentStep = step;
+
+            document.querySelectorAll('.wizard-step').forEach((stepEl, index) => {
+                const stepNum = index + 1;
+                stepEl.classList.remove('active', 'completed');
+                
+                if (stepNum === step) {
+                    stepEl.classList.add('active');
+                } else if (stepNum < step) {
+                    stepEl.classList.add('completed');
+                }
+            });
+
+            document.querySelectorAll('.wizard-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById('wizardStep' + step).classList.add('active');
+
+            const prevBtn = document.getElementById('wizardPrevBtn');
+            const nextBtn = document.getElementById('wizardNextBtn');
+            const finishBtn = document.getElementById('wizardFinishBtn');
+
+            prevBtn.style.display = step > 1 ? 'inline-flex' : 'none';
+            nextBtn.style.display = step < 5 ? 'inline-flex' : 'none';
+            finishBtn.style.display = step === 5 ? 'inline-flex' : 'none';
+
+            if (step === 4) {
+                renderPlayerSelection();
+            } else if (step === 5) {
+                renderPairFormation();
+            }
+        }
+
+        function nextWizardStep() {
+            if (!validateWizardStep(wizardCurrentStep)) {
+                return;
+            }
+
+            updateWizardStep(wizardCurrentStep + 1);
+        }
+
+        function previousWizardStep() {
+            updateWizardStep(wizardCurrentStep - 1);
+        }
+
+        function validateWizardStep(step) {
+            switch(step) {
+                case 1:
+                    const name = document.getElementById('tournamentName').value.trim();
+                    const date = document.getElementById('tournamentDate').value;
+                    
+                    if (!name) {
+                        alert('Por favor ingresa el nombre del torneo');
+                        return false;
+                    }
+                    if (!date) {
+                        alert('Por favor selecciona la fecha de inicio');
+                        return false;
+                    }
+                    
+                    wizardData.name = name;
+                    wizardData.date = date;
+                    return true;
+
+                case 2:
+                    if (!wizardData.type) {
+                        alert('Por favor selecciona el tipo de torneo');
+                        return false;
+                    }
+                    if (!wizardData.rounds) {
+                        alert('Por favor selecciona el número de vueltas');
+                        return false;
+                    }
+                    return true;
+
+                case 3:
+                    if (!wizardData.pairCount) {
+                        alert('Por favor selecciona el número de parejas');
+                        return false;
+                    }
+                    return true;
+
+                case 4:
+                    const requiredPlayers = wizardData.pairCount * 2;
+                    if (wizardData.selectedPlayers.length !== requiredPlayers) {
+                        alert('Debes seleccionar exactamente ' + requiredPlayers + ' jugadores');
+                        return false;
+                    }
+                    return true;
+
+                default:
+                    return true;
+            }
+        }
+
+        function selectTournamentType(type) {
+            document.querySelectorAll('#wizardStep2 .tournament-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            event.target.closest('.tournament-card').classList.add('selected');
+
+            wizardData.type = type;
+            
+            if (type === 'league') {
+                wizardData.weight = 1.0;
+                document.getElementById('roundsSelectionSection').style.display = 'block';
+            } else if (type === 'cup') {
+                wizardData.weight = 0.7;
+                document.getElementById('roundsSelectionSection').style.display = 'block';
+            } else if (type === 'special') {
+                wizardData.weight = 1.5;
+                document.getElementById('roundsSelectionSection').style.display = 'block';
+            }
+
+            document.getElementById('tournamentType').value = type;
+            
+            // Reset rounds selection
+            document.querySelectorAll('#roundsSelectionSection .tournament-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            wizardData.rounds = 0;
+        }
+
+        function selectRounds(rounds) {
+            document.querySelectorAll('#roundsSelectionSection .tournament-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            event.target.closest('.tournament-card').classList.add('selected');
+
+            wizardData.rounds = rounds;
+            document.getElementById('tournamentRounds').value = rounds;
+        }
+
+        function selectPairCount(count) {
+            document.querySelectorAll('#wizardStep3 .tournament-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            event.target.closest('.tournament-card').classList.add('selected');
+
+            wizardData.pairCount = count;
+            document.getElementById('pairCount').value = count;
+        }
+
+        function renderPlayerSelection() {
+            const season = appData.seasons[appData.currentSeason];
+            const activePlayers = season.players.filter(p => p.active);
+            const grid = document.getElementById('playerSelectionGrid');
+            const requiredPlayers = wizardData.pairCount * 2;
+
+            document.getElementById('requiredPlayerCount').textContent = requiredPlayers;
+            document.getElementById('selectedPlayerCount').textContent = wizardData.selectedPlayers.length;
+
+            let html = '';
+            activePlayers.forEach(player => {
+                const isSelected = wizardData.selectedPlayers.includes(player.id);
+                const selectedClass = isSelected ? 'selected' : '';
+                
+                html += '<div class="player-checkbox ' + selectedClass + '" onclick="togglePlayerSelection(\'' + player.id + '\')">';
+                html += '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="event.stopPropagation(); togglePlayerSelection(\'' + player.id + '\')">';
+                html += '<span>' + player.name + '</span>';
+                html += '</div>';
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function togglePlayerSelection(playerId) {
+            const requiredPlayers = wizardData.pairCount * 2;
+            const index = wizardData.selectedPlayers.indexOf(playerId);
+
+            if (index > -1) {
+                wizardData.selectedPlayers.splice(index, 1);
+            } else {
+                if (wizardData.selectedPlayers.length < requiredPlayers) {
+                    wizardData.selectedPlayers.push(playerId);
+                } else {
+                    alert('Ya has seleccionado el máximo de jugadores (' + requiredPlayers + ')');
+                    return;
+                }
+            }
+
+            renderPlayerSelection();
+        }
+
+        function selectAllPlayers() {
+            const season = appData.seasons[appData.currentSeason];
+            const activePlayers = season.players.filter(p => p.active);
+            const requiredPlayers = wizardData.pairCount * 2;
+
+            if (activePlayers.length < requiredPlayers) {
+                alert('No hay suficientes jugadores activos. Necesitas ' + requiredPlayers + ' jugadores pero solo hay ' + activePlayers.length + ' activos.');
+                return;
+            }
+
+            wizardData.selectedPlayers = activePlayers.slice(0, requiredPlayers).map(p => p.id);
+            
+            renderPlayerSelection();
+            showNotification('Seleccionados ' + requiredPlayers + ' jugadores automáticamente', 'success');
+        }
+
+        function renderPairFormation() {
+            const season = appData.seasons[appData.currentSeason];
+            const container = document.getElementById('pairsFormation');
+
+            if (wizardData.pairs.length === 0) {
+                for (let i = 0; i < wizardData.pairCount; i++) {
+                    wizardData.pairs.push({
+                        id: 'pair' + (i + 1),
+                        name: 'Pareja ' + (i + 1),
+                        player1: null,
+                        player2: null
+                    });
+                }
+            }
+
+            let html = '';
+            wizardData.pairs.forEach((pair, index) => {
+                html += '<div class="pair-card">';
+                html += '<div class="pair-header">Pareja ' + (index + 1) + '</div>';
+                html += '<div class="pair-players">';
+                
+                html += '<select class="pair-player-select" onchange="updatePairPlayer(' + index + ', 1, this.value)">';
+                html += '<option value="">Seleccionar Jugador 1...</option>';
+                wizardData.selectedPlayers.forEach(playerId => {
+                    const player = season.players.find(p => p.id === playerId);
+                    const isUsed = wizardData.pairs.some((p, pIndex) => 
+                        pIndex !== index && (p.player1 === playerId || p.player2 === playerId)
+                    );
+                    if (!isUsed || pair.player1 === playerId) {
+                        html += '<option value="' + playerId + '" ' + (pair.player1 === playerId ? 'selected' : '') + '>' + player.name + '</option>';
+                    }
+                });
+                html += '</select>';
+
+                html += '<select class="pair-player-select" onchange="updatePairPlayer(' + index + ', 2, this.value)">';
+                html += '<option value="">Seleccionar Jugador 2...</option>';
+                wizardData.selectedPlayers.forEach(playerId => {
+                    const player = season.players.find(p => p.id === playerId);
+                    const isUsed = wizardData.pairs.some((p, pIndex) => 
+                        pIndex !== index && (p.player1 === playerId || p.player2 === playerId)
+                    );
+                    if (!isUsed || pair.player2 === playerId) {
+                        html += '<option value="' + playerId + '" ' + (pair.player2 === playerId ? 'selected' : '') + '>' + player.name + '</option>';
+                    }
+                });
+                html += '</select>';
+
+                html += '</div>';
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updatePairPlayer(pairIndex, playerNumber, playerId) {
+            if (playerNumber === 1) {
+                wizardData.pairs[pairIndex].player1 = playerId || null;
+            } else {
+                wizardData.pairs[pairIndex].player2 = playerId || null;
+            }
+
+            renderPairFormation();
+        }
+
+        function repeatLastTournamentPairs() {
+            const season = appData.seasons[appData.currentSeason];
+            
+            if (!season.tournaments || season.tournaments.length === 0) {
+                alert('No hay torneos anteriores para copiar las parejas');
+                return;
+            }
+
+            const lastTournament = season.tournaments[season.tournaments.length - 1];
+            
+            if (!lastTournament.pairs || lastTournament.pairs.length === 0) {
+                alert('El último torneo no tiene parejas definidas');
+                return;
+            }
+
+            if (lastTournament.pairs.length !== wizardData.pairCount) {
+                if (!confirm('El último torneo tenía ' + lastTournament.pairs.length + ' parejas, pero este torneo tiene ' + wizardData.pairCount + ' parejas.\n\n¿Deseas copiar las parejas de todos modos? (Se copiarán las primeras ' + Math.min(lastTournament.pairs.length, wizardData.pairCount) + ' parejas)')) {
+                    return;
+                }
+            }
+
+            const lastPairs = lastTournament.pairs;
+            let copiedCount = 0;
+            let notAvailableCount = 0;
+
+            for (let i = 0; i < Math.min(lastPairs.length, wizardData.pairs.length); i++) {
+                const lastPair = lastPairs[i];
+                const player1Id = lastPair.players[0];
+                const player2Id = lastPair.players[1];
+
+                if (wizardData.selectedPlayers.includes(player1Id) && 
+                    wizardData.selectedPlayers.includes(player2Id)) {
+                    
+                    wizardData.pairs[i].player1 = player1Id;
+                    wizardData.pairs[i].player2 = player2Id;
+                    copiedCount++;
+                } else {
+                    notAvailableCount++;
+                }
+            }
+
+            renderPairFormation();
+
+            if (notAvailableCount > 0) {
+                showNotification('Se copiaron ' + copiedCount + ' parejas. ' + notAvailableCount + ' parejas no se pudieron copiar porque los jugadores no están disponibles.', 'warning');
+            } else {
+                showNotification('Se copiaron ' + copiedCount + ' parejas del último torneo', 'success');
+            }
+        }
+
+        function finishTournamentCreation() {
+            const incompletePairs = wizardData.pairs.filter(p => !p.player1 || !p.player2);
+            if (incompletePairs.length > 0) {
+                alert('Por favor completa todas las parejas antes de continuar');
+                return;
+            }
+
+            const season = appData.seasons[appData.currentSeason];
+
+            const tournament = {
+                id: 't' + Date.now(),
+                name: wizardData.name,
+                date: wizardData.date,
+                type: wizardData.type,
+                weight: wizardData.weight,
+                rounds: wizardData.rounds,
+                status: 'active',
+                pairs: [],
+                matches: [],
+                penalties: [],
+                groups: [],
+                playoffs: null
+            };
+
+            wizardData.pairs.forEach((pair, index) => {
+                const player1 = season.players.find(p => p.id === pair.player1);
+                const player2 = season.players.find(p => p.id === pair.player2);
+
+                tournament.pairs.push({
+                    id: pair.id,
+                    name: player1.name + ' - ' + player2.name,
+                    players: [pair.player1, pair.player2],
+                    points: 0,
+                    played: 0,
+                    won: 0,
+                    lost: 0,
+                    setsFor: 0,
+                    setsAgainst: 0,
+                    gamesFor: 0,
+                    gamesAgainst: 0,
+                    rankingAverage: (player1.rankingPoints + player2.rankingPoints) / 2
+                });
+            });
+
+            // Sort pairs by ranking for seeding
+            tournament.pairs.sort((a, b) => b.rankingAverage - a.rankingAverage);
+
+            // For cups, create groups with bombos
+            if (tournament.type === 'cup') {
+                tournament.groups = createGroupsWithBombos(tournament.pairs);
+            }
+
+            season.tournaments.push(tournament);
+            saveData(appData);
+
+            closeTournamentWizard();
+            showSection('tournament');
+            renderTournamentsList();
+            renderDashboard();
+
+            showNotification('Torneo creado exitosamente', 'success');
+        }
+
+        // Create groups with bombos system
+        function createGroupsWithBombos(pairs) {
+            const numPairs = pairs.length;
+            const numGroups = 2; // Always 2 groups (A and B)
+            const pairsPerGroup = numPairs / numGroups;
+
+            const groups = [
+                { id: 'groupA', name: 'Grupo A', pairs: [] },
+                { id: 'groupB', name: 'Grupo B', pairs: [] }
+            ];
+
+            // Distribute pairs using snake draft (zigzag)
+            for (let i = 0; i < numPairs; i++) {
+                const groupIndex = Math.floor(i / pairsPerGroup) % 2;
+                
+                // Alternate: A, A, B, B, A, A, B, B (for 8 teams)
+                // This ensures balanced distribution
+                const targetGroup = (Math.floor(i / 2) % 2 === 0) ? 0 : 1;
+                
+                groups[targetGroup].pairs.push(pairs[i].id);
+            }
+
+            return groups;
+        }
+
+        function renderTournamentsList() {
+            const season = appData.seasons[appData.currentSeason];
+            const container = document.getElementById('tournamentsList');
+
+            if (!season.tournaments || season.tournaments.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">No hay torneos creados aún</p>';
+                return;
+            }
+
+            let html = '';
+            season.tournaments.forEach(tournament => {
+                const statusBadge = tournament.status === 'active' 
+                    ? '<span class="badge" style="background: #4CAF50; color: white;">Activo</span>'
+                    : tournament.status === 'completed'
+                    ? '<span class="badge" style="background: #2196F3; color: white;">Completado</span>'
+                    : '<span class="badge" style="background: #9E9E9E; color: white;">Pendiente</span>';
+
+                const typeLabel = tournament.type === 'league' ? '🏆 Liga Regular' :
+                                 tournament.type === 'cup' ? '🏅 Copa Express' : '⭐ Campeonato Especial';
+
+                html += '<div class="card" style="margin-bottom: 1rem;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: start;">';
+                html += '<div>';
+                html += '<h3 style="margin-bottom: 0.5rem;">' + tournament.name + ' ' + statusBadge + '</h3>';
+                html += '<p style="color: var(--text-light); margin: 0.25rem 0;">' + typeLabel + ' | Peso: ' + tournament.weight + 'x | Fecha: ' + new Date(tournament.date).toLocaleDateString('es-ES') + '</p>';
+                html += '<p style="color: var(--text-light); margin: 0.25rem 0;">' + tournament.pairs.length + ' parejas participantes</p>';
+                
+                // Show match progress
+                if (tournament.matches && tournament.matches.length > 0) {
+                    const completedMatches = tournament.matches.filter(m => m.status === 'completed' || m.status === 'walkover').length;
+                    const totalMatches = tournament.matches.length;
+                    html += '<p style="color: var(--text-light); margin: 0.25rem 0;">Partidos: ' + completedMatches + '/' + totalMatches + ' completados</p>';
+                }
+                
+                html += '</div>';
+                html += '<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">';
+                html += '<button class="btn btn-outline" onclick="viewTournamentDetails(\'' + tournament.id + '\')">Ver Detalles</button>';
+                if (tournament.status === 'active') {
+                    html += '<button class="btn" style="background: #9C27B0; color: white;" onclick="completeTournamentDemo(\'' + tournament.id + '\')">🎲 Completar (DEMO)</button>';
+                }
+                html += '<button class="btn btn-danger" onclick="deleteTournament(\'' + tournament.id + '\')">🗑️ Borrar</button>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Delete tournament and all related data
+        function deleteTournament(tournamentId) {
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            
+            if (!tournament) {
+                alert('Torneo no encontrado');
+                return;
+            }
+
+            // Get tournament info for confirmation
+            const tournamentInfo = tournament.name + ' (' + 
+                (tournament.type === 'league' ? 'Liga' : tournament.type === 'cup' ? 'Copa' : 'Especial') + ')';
+
+            if (!confirm('¿Estás seguro de que deseas BORRAR el torneo "' + tournamentInfo + '"?\n\n' +
+                'Esta acción eliminará:\n' +
+                '- El torneo y todos sus partidos\n' +
+                '- Las estadísticas asociadas de los jugadores\n' +
+                '- Los puntos de ranking de este torneo\n\n' +
+                'Esta acción NO se puede deshacer.')) {
+                return;
+            }
+
+            if (!confirm('ÚLTIMA CONFIRMACIÓN:\n\nSe borrarán TODOS los datos del torneo "' + tournament.name + '".\n\n¿Continuar?')) {
+                return;
+            }
+
+            // 1. Restore player stats (remove wins/losses from this tournament)
+            tournament.pairs.forEach(pair => {
+                pair.players.forEach(playerId => {
+                    const player = season.players.find(p => p.id === playerId);
+                    if (player) {
+                        // Remove wins and losses
+                        player.totalWins -= pair.won || 0;
+                        player.totalLosses -= pair.lost || 0;
+                        
+                        // Ensure they don't go negative
+                        if (player.totalWins < 0) player.totalWins = 0;
+                        if (player.totalLosses < 0) player.totalLosses = 0;
+                        
+                        // Remove title/runner-up
+                        if (pair.finalPosition === 1) {
+                            player.titles -= 1;
+                            if (player.titles < 0) player.titles = 0;
+                        } else if (pair.finalPosition === 2) {
+                            player.runnerUps -= 1;
+                            if (player.runnerUps < 0) player.runnerUps = 0;
+                        }
+                        
+                        // Remove from tournament history
+                        if (player.tournaments) {
+                            player.tournaments = player.tournaments.filter(t => t.tournamentId !== tournamentId);
+                        }
+                    }
+                });
+            });
+
+            // 2. Remove tournament from array
+            season.tournaments = season.tournaments.filter(t => t.id !== tournamentId);
+
+            // 3. Recalculate all rankings (without the deleted tournament)
+            season.players.forEach(player => {
+                const ranking = calculatePlayerRanking(player.id);
+                player.rankingPoints = ranking.totalPoints;
+                player.rankingBreakdown = ranking.breakdown;
+            });
+
+            // 4. Save changes
+            saveData(appData);
+
+            // 5. Refresh all views
+            renderTournamentsList();
+            renderDashboard();
+            renderRankingTable();
+            populateCalendarTournamentSelect();
+            populateStandingsTournamentSelect();
+            populatePlayoffsTournamentSelect();
+
+            showNotification('Torneo "' + tournament.name + '" eliminado correctamente', 'success');
+        }
+
+        // ============================================
+        // RANKING CALCULATION SYSTEM (MODULE 4)
+        // ============================================
+
+        function getBasePoints(position, pairCount, tournamentType) {
+            if (tournamentType === 'league') {
+                if (pairCount === 8) {
+                    if (position === 1) return 1000;
+                    if (position === 2) return 700;
+                    if (position >= 3 && position <= 4) return 500;
+                    if (position >= 5 && position <= 6) return 300;
+                    return 150;
+                } else if (pairCount === 6) {
+                    if (position === 1) return 800;
+                    if (position === 2) return 560;
+                    if (position >= 3 && position <= 4) return 400;
+                    return 200;
+                } else if (pairCount === 4) {
+                    if (position === 1) return 600;
+                    if (position === 2) return 420;
+                    return 250;
+                } else if (pairCount === 10) {
+                    if (position === 1) return 1200;
+                    if (position === 2) return 840;
+                    if (position >= 3 && position <= 4) return 600;
+                    if (position >= 5 && position <= 6) return 360;
+                    if (position >= 7 && position <= 8) return 180;
+                    return 90;
+                } else if (pairCount === 12) {
+                    if (position === 1) return 1400;
+                    if (position === 2) return 980;
+                    if (position >= 3 && position <= 4) return 700;
+                    if (position >= 5 && position <= 6) return 420;
+                    if (position >= 7 && position <= 8) return 210;
+                    if (position >= 9 && position <= 10) return 105;
+                    return 52;
+                }
+            }
+            
+            if (tournamentType === 'cup') {
+                if (pairCount === 8) {
+                    if (position === 1) return 700;
+                    if (position === 2) return 490;
+                    if (position >= 3 && position <= 4) return 350;
+                    if (position >= 5 && position <= 8) return 210;
+                    return 105;
+                } else if (pairCount >= 4 && pairCount <= 6) {
+                    if (position === 1) return 500;
+                    if (position === 2) return 350;
+                    if (position >= 3 && position <= 4) return 200;
+                    return 100;
+                }
+            }
+            
+            if (tournamentType === 'special') {
+                return getBasePoints(position, pairCount, 'league');
+            }
+            
+            return 0;
+        }
+
+        function getVictoryPoints(matchType) {
+            switch(matchType) {
+                case 'regular': return 30;
+                case 'group_stage': return 30; // Copa fase de grupos
+                case 'preliminary': return 50;
+                case 'semifinal': return 75;
+                case 'final': return 100;
+                case 'third_place': return 50;
+                case 'cup_elimination': return 40;
+                case 'friendly': return 10;
+                default: return 30;
+            }
+        }
+
+        // Calculate winning streak bonus for a player in a tournament
+        function calculateStreakBonus(playerId, tournament) {
+            if (!tournament.matches || tournament.matches.length === 0) return 0;
+            
+            // Get all matches for this player in chronological order
+            const playerMatches = tournament.matches
+                .filter(m => {
+                    const pair1 = tournament.pairs.find(p => p.id === m.pair1);
+                    const pair2 = tournament.pairs.find(p => p.id === m.pair2);
+                    return (pair1 && pair1.players.includes(playerId)) || 
+                           (pair2 && pair2.players.includes(playerId));
+                })
+                .filter(m => m.status === 'completed' || m.status === 'walkover')
+                .sort((a, b) => {
+                    const roundA = a.round || a.week || 0;
+                    const roundB = b.round || b.week || 0;
+                    return roundA - roundB;
+                });
+
+            let maxStreak = 0;
+            let currentStreak = 0;
+
+            playerMatches.forEach(match => {
+                const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+                const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+                
+                const playerPair = pair1 && pair1.players.includes(playerId) ? pair1 : pair2;
+                const isWinner = match.result && match.result.winner === playerPair.id;
+
+                if (isWinner) {
+                    currentStreak++;
+                    maxStreak = Math.max(maxStreak, currentStreak);
+                } else {
+                    currentStreak = 0;
+                }
+            });
+
+            // Apply streak bonuses
+            if (maxStreak >= 7) return 100;
+            if (maxStreak >= 5) return 50;
+            return 0;
+        }
+
+        // Check if tournament was won without losing any sets
+        function checkUndefeatedBonus(playerId, tournament) {
+            if (!tournament.matches || tournament.matches.length === 0) return false;
+            
+            const playerMatches = tournament.matches
+                .filter(m => {
+                    const pair1 = tournament.pairs.find(p => p.id === m.pair1);
+                    const pair2 = tournament.pairs.find(p => p.id === m.pair2);
+                    return (pair1 && pair1.players.includes(playerId)) || 
+                           (pair2 && pair2.players.includes(playerId));
+                })
+                .filter(m => m.status === 'completed');
+
+            // Check if player won all matches without losing a set
+            for (const match of playerMatches) {
+                const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+                const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+                
+                const playerPair = pair1 && pair1.players.includes(playerId) ? pair1 : pair2;
+                const isWinner = match.result && match.result.winner === playerPair.id;
+
+                if (!isWinner) return false; // Lost a match
+
+                // Check if lost any sets
+                if (match.result && match.result.sets) {
+                    const setsLost = playerPair.id === match.pair1 ? match.result.sets2 : match.result.sets1;
+                    if (setsLost > 0) return false;
+                }
+            }
+
+            return playerMatches.length > 0;
+        }
+
+        // Calculate versatility bonus (winning with different partners)
+        function calculateVersatilityBonus(playerId, season) {
+            const currentYear = new Date().getFullYear();
+            
+            // Get all tournaments won by this player
+            const wonTournaments = season.tournaments.filter(t => {
+                if (t.status !== 'completed') return false;
+                
+                const playerPair = t.pairs.find(p => 
+                    p.players.includes(playerId) && p.finalPosition === 1
+                );
+                
+                return playerPair !== undefined;
+            });
+
+            // Get unique partners this year
+            const partnersThisYear = new Set();
+            const partnersAllTime = new Set();
+            
+            wonTournaments.forEach(t => {
+                const playerPair = t.pairs.find(p => 
+                    p.players.includes(playerId) && p.finalPosition === 1
+                );
+                
+                if (playerPair) {
+                    const partnerId = playerPair.players.find(id => id !== playerId);
+                    partnersAllTime.add(partnerId);
+                    
+                    const tournamentYear = new Date(t.date).getFullYear();
+                    if (tournamentYear === currentYear) {
+                        partnersThisYear.add(partnerId);
+                    }
+                }
+            });
+
+            // Get runner-up partners this year
+            const runnerUpPartnersThisYear = new Set();
+            season.tournaments.filter(t => {
+                if (t.status !== 'completed') return false;
+                const tournamentYear = new Date(t.date).getFullYear();
+                return tournamentYear === currentYear;
+            }).forEach(t => {
+                const playerPair = t.pairs.find(p => 
+                    p.players.includes(playerId) && p.finalPosition === 2
+                );
+                
+                if (playerPair) {
+                    const partnerId = playerPair.players.find(id => id !== playerId);
+                    runnerUpPartnersThisYear.add(partnerId);
+                }
+            });
+
+            let bonus = 0;
+
+            // Win with 2 different partners this year: +200
+            if (partnersThisYear.size >= 2) bonus += 200;
+
+            // Win with 3+ different partners (all time): +500
+            if (partnersAllTime.size >= 3) bonus += 500;
+
+            // Runner-up with 2 different partners this year: +100
+            if (runnerUpPartnersThisYear.size >= 2) bonus += 100;
+
+            return bonus;
+        }
+
+        // Check if player has MVP award in tournament
+        function checkMVPBonus(playerId, tournament) {
+            if (!tournament.awards) return false;
+            return tournament.awards.mvp === playerId;
+        }
+
+        // Calculate penalties for a player in a tournament
+        function calculatePenalties(playerId, tournament) {
+            if (!tournament.penalties) return 0;
+            
+            let totalPenalties = 0;
+            
+            tournament.penalties.forEach(penalty => {
+                // Check if penalty applies to this player
+                if (penalty.playerId === playerId) {
+                    totalPenalties += penalty.points || 0;
+                } else if (!penalty.playerId && penalty.pairId) {
+                    // Penalty applied to pair - check if player is in that pair
+                    const pair = tournament.pairs.find(p => p.id === penalty.pairId);
+                    if (pair && pair.players.includes(playerId)) {
+                        totalPenalties += penalty.points || 0;
+                    }
+                }
+            });
+            
+            return totalPenalties;
+        }
+
+        function calculatePerformanceMultiplier(wins, totalMatches) {
+            if (totalMatches === 0) return 1.0;
+            return 1.0 + (wins / totalMatches * 0.3);
+        }
+
+        function calculateDecay(tournamentDate, tournamentType) {
+            if (tournamentType === 'special') {
+                return 1.0;
+            }
+
+            const tournamentTime = new Date(tournamentDate).getTime();
+            const currentTime = new Date('2025-10-01').getTime();
+            const monthsDiff = (currentTime - tournamentTime) / (1000 * 60 * 60 * 24 * 30);
+
+            if (monthsDiff < 6) return 1.0;
+            if (monthsDiff < 12) return 1.0;
+            if (monthsDiff < 18) return 0.75;
+            if (monthsDiff < 24) return 0.5;
+            if (monthsDiff < 30) return 0.25;
+            return 0;
+        }
+
+        function getRankBadge(points) {
+            if (points >= 5000) return '👑';
+            if (points >= 4000) return '💎';
+            if (points >= 3000) return '🔴';
+            if (points >= 2000) return '🟠';
+            if (points >= 1000) return '🟡';
+            if (points >= 500) return '🟢';
+            return '🔵';
+        }
+
+        function calculatePlayerRanking(playerId) {
+            const season = appData.seasons[appData.currentSeason];
+            const player = season.players.find(p => p.id === playerId);
+            
+            if (!player) return { totalPoints: 0, breakdown: [] };
+
+            let totalPoints = 0;
+            let tournamentBreakdown = [];
+
+            season.tournaments.forEach(tournament => {
+                if (tournament.status !== 'completed') return;
+
+                const pair = tournament.pairs.find(p => p.players.includes(playerId));
+                if (!pair) return;
+
+                const position = pair.finalPosition || 0;
+                if (position === 0) return;
+
+                // 1. BASE POINTS (Position + Weight + Multiplier)
+                const basePoints = getBasePoints(position, tournament.pairs.length, tournament.type);
+                const multiplier = calculatePerformanceMultiplier(pair.won, pair.played);
+                const weight = tournament.weight;
+                const positionPoints = basePoints * weight * multiplier;
+
+                // 2. VICTORY POINTS (by match type)
+                let victoryPoints = 0;
+                if (tournament.matches) {
+                    tournament.matches.forEach(match => {
+                        if ((match.status === 'completed' || match.status === 'walkover') && match.result) {
+                            const winnerPair = tournament.pairs.find(p => p.id === match.result.winner);
+                            if (winnerPair && winnerPair.players.includes(playerId)) {
+                                victoryPoints += getVictoryPoints(match.type || 'regular');
+                            }
+                        }
+                    });
+                }
+
+                // 3. BONUSES
+                let bonuses = 0;
+
+                // Streak bonus (5 wins = 50, 7+ wins = 100)
+                const streakBonus = calculateStreakBonus(playerId, tournament);
+                bonuses += streakBonus;
+
+                // Undefeated bonus (win without losing sets = 200)
+                if (position === 1 && checkUndefeatedBonus(playerId, tournament)) {
+                    bonuses += 200;
+                }
+
+                // MVP bonus (150 points)
+                if (checkMVPBonus(playerId, tournament)) {
+                    bonuses += 150;
+                }
+
+                // Versatility bonus (calculated across season)
+                const versatilityBonus = calculateVersatilityBonus(playerId, season);
+                bonuses += versatilityBonus;
+
+                // 4. PENALTIES
+                const penalties = calculatePenalties(playerId, tournament);
+
+                // 5. DECAY
+                const decay = calculateDecay(tournament.date, tournament.type);
+
+                // Total for this tournament
+                const tournamentTotal = (positionPoints + victoryPoints + bonuses - penalties) * decay;
+
+                totalPoints += tournamentTotal;
+
+                tournamentBreakdown.push({
+                    tournamentId: tournament.id,
+                    tournamentName: tournament.name,
+                    tournamentType: tournament.type,
+                    position: position,
+                    basePoints: Math.round(positionPoints),
+                    victoryPoints: victoryPoints,
+                    bonuses: bonuses,
+                    penalties: penalties,
+                    decay: decay,
+                    total: Math.round(tournamentTotal),
+                    details: {
+                        streakBonus: streakBonus,
+                        undefeatedBonus: position === 1 && checkUndefeatedBonus(playerId, tournament) ? 200 : 0,
+                        mvpBonus: checkMVPBonus(playerId, tournament) ? 150 : 0,
+                        versatilityBonus: versatilityBonus
+                    }
+                });
+            });
+
+            return {
+                totalPoints: Math.round(totalPoints),
+                breakdown: tournamentBreakdown
+            };
+        }
+
+        function recalculateAllRankings() {
+            const season = appData.seasons[appData.currentSeason];
+            
+            season.players.forEach(player => {
+                const ranking = calculatePlayerRanking(player.id);
+                player.rankingPoints = ranking.totalPoints;
+                player.rankingBreakdown = ranking.breakdown;
+            });
+
+            saveData(appData);
+            renderRankingTable();
+            renderDashboard();
+            
+            showNotification('Rankings recalculados correctamente', 'success');
+        }
+
+        function renderRankingTable() {
+            const season = appData.seasons[appData.currentSeason];
+            const tbody = document.getElementById('rankingTable');
+
+            const sortedPlayers = [...season.players].sort((a, b) => b.rankingPoints - a.rankingPoints);
+
+            if (sortedPlayers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-light);">No hay jugadores registrados</td></tr>';
+                return;
+            }
+
+            let html = '';
+            sortedPlayers.forEach((player, index) => {
+                const position = index + 1;
+                const totalMatches = player.totalWins + player.totalLosses;
+                const winRate = totalMatches > 0 ? ((player.totalWins / totalMatches) * 100).toFixed(1) : '0.0';
+                const badge = getRankBadge(player.rankingPoints);
+
+                let positionBadge = '';
+                if (position === 1) positionBadge = '<span class="badge badge-gold">🥇</span>';
+                else if (position === 2) positionBadge = '<span class="badge badge-silver">🥈</span>';
+                else if (position === 3) positionBadge = '<span class="badge badge-bronze">🥉</span>';
+
+                html += '<tr style="cursor: pointer;" onclick="showPlayerRankingBreakdown(\'' + player.id + '\')" title="Click para ver desglose detallado">';
+                html += '<td><strong>' + position + '</strong></td>';
+                html += '<td><strong>' + player.name + '</strong> ' + positionBadge + ' <span class="rank-badge" style="background: var(--primary); color: white;">' + badge + '</span></td>';
+                html += '<td><strong>' + player.rankingPoints.toLocaleString() + '</strong></td>';
+                html += '<td>' + (player.tournaments ? player.tournaments.length : 0) + '</td>';
+                html += '<td>' + player.titles + '</td>';
+                html += '<td>' + player.runnerUps + '</td>';
+                html += '<td>' + player.totalWins + '-' + player.totalLosses + '</td>';
+                html += '<td>' + winRate + '%</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Show detailed ranking breakdown for a player
+        function showPlayerRankingBreakdown(playerId) {
+            const season = appData.seasons[appData.currentSeason];
+            const player = season.players.find(p => p.id === playerId);
+            
+            if (!player) return;
+
+            const rankingData = calculatePlayerRanking(playerId);
+
+            let html = '<div style="max-height: 70vh; overflow-y: auto;">';
+            
+            html += '<h3 style="margin-bottom: 1rem;">' + player.name + '</h3>';
+            html += '<div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; text-align: center;">';
+            html += '<div style="font-size: 0.9rem; opacity: 0.9;">Puntos Totales de Ranking</div>';
+            html += '<div style="font-size: 3rem; font-weight: bold;">' + rankingData.totalPoints.toLocaleString() + '</div>';
+            html += '<div style="font-size: 0.9rem; opacity: 0.9;">' + getRankBadge(rankingData.totalPoints) + ' ' + getCategoryName(rankingData.totalPoints) + '</div>';
+            html += '</div>';
+
+            if (rankingData.breakdown.length === 0) {
+                html += '<p style="color: var(--text-light); text-align: center;">No hay torneos completados aún</p>';
+            } else {
+                html += '<h4 style="margin-bottom: 1rem;">Desglose por Torneo</h4>';
+                
+                rankingData.breakdown.forEach(t => {
+                    const typeLabel = t.tournamentType === 'league' ? '🏆 Liga' : 
+                                     t.tournamentType === 'cup' ? '🏅 Copa' : '⭐ Especial';
+                    
+                    html += '<div style="background: var(--bg-light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--primary);">';
+                    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">';
+                    html += '<strong>' + t.tournamentName + '</strong>';
+                    html += '<span style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">' + t.total.toLocaleString() + ' pts</span>';
+                    html += '</div>';
+                    html += '<div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.5rem;">' + typeLabel + ' | Posición: ' + t.position + 'º</div>';
+                    
+                    html += '<table style="width: 100%; font-size: 0.85rem; margin-top: 0.5rem;">';
+                    html += '<tr><td>Puntos Base:</td><td style="text-align: right;"><strong>' + t.basePoints.toLocaleString() + '</strong></td></tr>';
+                    html += '<tr><td>Victorias:</td><td style="text-align: right;"><strong>+' + t.victoryPoints + '</strong></td></tr>';
+                    
+                    if (t.bonuses > 0) {
+                        html += '<tr><td>Bonificaciones:</td><td style="text-align: right; color: var(--success);"><strong>+' + t.bonuses + '</strong></td></tr>';
+                        
+                        if (t.details) {
+                            if (t.details.streakBonus > 0) {
+                                html += '<tr><td style="padding-left: 1rem; font-size: 0.8rem;">└ Racha:</td><td style="text-align: right; font-size: 0.8rem;">+' + t.details.streakBonus + '</td></tr>';
+                            }
+                            if (t.details.undefeatedBonus > 0) {
+                                html += '<tr><td style="padding-left: 1rem; font-size: 0.8rem;">└ Invicto:</td><td style="text-align: right; font-size: 0.8rem;">+' + t.details.undefeatedBonus + '</td></tr>';
+                            }
+                            if (t.details.mvpBonus > 0) {
+                                html += '<tr><td style="padding-left: 1rem; font-size: 0.8rem;">└ MVP:</td><td style="text-align: right; font-size: 0.8rem;">+' + t.details.mvpBonus + '</td></tr>';
+                            }
+                            if (t.details.versatilityBonus > 0) {
+                                html += '<tr><td style="padding-left: 1rem; font-size: 0.8rem;">└ Versatilidad:</td><td style="text-align: right; font-size: 0.8rem;">+' + t.details.versatilityBonus + '</td></tr>';
+                            }
+                        }
+                    }
+                    
+                    if (t.penalties > 0) {
+                        html += '<tr><td>Penalizaciones:</td><td style="text-align: right; color: var(--error);"><strong>-' + t.penalties + '</strong></td></tr>';
+                    }
+                    
+                    html += '<tr><td>Decaimiento:</td><td style="text-align: right;">' + (t.decay * 100).toFixed(0) + '%</td></tr>';
+                    html += '</table>';
+                    
+                    html += '</div>';
+                });
+            }
+            
+            html += '</div>';
+
+            // Show in a modal-like alert
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = '<div class="modal-content" style="max-width: 600px;">' +
+                '<div class="modal-header">' +
+                '<h3 class="modal-title">Desglose de Ranking</h3>' +
+                '<button class="modal-close" onclick="this.closest(\'.modal\').remove()">✕</button>' +
+                '</div>' +
+                html +
+                '<div class="modal-actions">' +
+                '<button class="btn btn-primary" onclick="this.closest(\'.modal\').remove()">Cerrar</button>' +
+                '</div>' +
+                '</div>';
+            
+            document.body.appendChild(modal);
+        }
+
+        function getCategoryName(points) {
+            if (points >= 5000) return 'Leyenda';
+            if (points >= 4000) return 'Diamante';
+            if (points >= 3000) return 'Rojo';
+            if (points >= 2000) return 'Naranja';
+            if (points >= 1000) return 'Amarillo';
+            if (points >= 500) return 'Verde';
+            return 'Azul';
+        }
+
+        function renderPairsRankingTable() {
+            const season = appData.seasons[appData.currentSeason];
+            const tbody = document.getElementById('pairsRankingTable');
+
+            const activeTournament = season.tournaments.find(t => t.status === 'active');
+            
+            if (!activeTournament || !activeTournament.pairs) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-light);">No hay torneo activo con parejas formadas</td></tr>';
+                return;
+            }
+
+            const pairsWithAverage = activeTournament.pairs.map(pair => {
+                const player1 = season.players.find(p => p.id === pair.players[0]);
+                const player2 = season.players.find(p => p.id === pair.players[1]);
+                
+                const avg = (player1.rankingPoints + player2.rankingPoints) / 2;
+
+                return {
+                    name: pair.name,
+                    average: avg,
+                    player1: player1,
+                    player2: player2
+                };
+            });
+
+            pairsWithAverage.sort((a, b) => b.average - a.average);
+
+            let html = '';
+            pairsWithAverage.forEach((pair, index) => {
+                const badge1 = getRankBadge(pair.player1.rankingPoints);
+                const badge2 = getRankBadge(pair.player2.rankingPoints);
+
+                html += '<tr>';
+                html += '<td><strong>' + (index + 1) + '</strong></td>';
+                html += '<td><strong>' + pair.name + '</strong></td>';
+                html += '<td><strong>' + Math.round(pair.average).toLocaleString() + '</strong></td>';
+                html += '<td>' + pair.player1.name + ' <span class="rank-badge" style="background: var(--primary); color: white;">' + badge1 + '</span> (' + pair.player1.rankingPoints.toLocaleString() + ')</td>';
+                html += '<td>' + pair.player2.name + ' <span class="rank-badge" style="background: var(--primary); color: white;">' + badge2 + '</span> (' + pair.player2.rankingPoints.toLocaleString() + ')</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function completeTournamentDemo(tournamentId) {
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            
+            if (!tournament) {
+                alert('Torneo no encontrado');
+                return;
+            }
+
+            if (!confirm('Esta función de DEMO completará el torneo "' + tournament.name + '" con resultados simulados.\n\n¿Deseas continuar?')) {
+                return;
+            }
+
+            // Generate fixture if not exists
+            if (!tournament.matches || tournament.matches.length === 0) {
+                if (tournament.type === 'cup') {
+                    generateCupFixture(tournament);
+                } else {
+                    generateLeagueFixture(tournament);
+                }
+            }
+
+            // Simulate all matches
+            tournament.matches.forEach(match => {
+                if (match.status !== 'pending') return;
+
+                const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+                const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+
+                if (!pair1 || !pair2) return;
+
+                // Simulate random result
+                const set1_1 = Math.random() > 0.5 ? 6 : Math.floor(Math.random() * 6);
+                const set1_2 = set1_1 === 6 ? Math.floor(Math.random() * 5) : 6;
+                
+                const set2_1 = Math.random() > 0.5 ? 6 : Math.floor(Math.random() * 6);
+                const set2_2 = set2_1 === 6 ? Math.floor(Math.random() * 5) : 6;
+
+                let setsTeam1 = 0;
+                let setsTeam2 = 0;
+
+                if (set1_1 > set1_2) setsTeam1++; else setsTeam2++;
+                if (set2_1 > set2_2) setsTeam1++; else setsTeam2++;
+
+                const winner = setsTeam1 > setsTeam2 ? match.pair1 : match.pair2;
+                const loser = winner === match.pair1 ? match.pair2 : match.pair1;
+
+                match.status = 'completed';
+                match.winner = winner;
+                match.result = {
+                    winner: winner,
+                    loser: loser,
+                    sets1: setsTeam1,
+                    sets2: setsTeam2,
+                    games1: set1_1 + set2_1,
+                    games2: set1_2 + set2_2,
+                    sets: [
+                        { team1: set1_1, team2: set1_2 },
+                        { team1: set2_1, team2: set2_2 }
+                    ]
+                };
+
+                // Update pair stats
+                pair1.played += 1;
+                pair2.played += 1;
+
+                if (winner === match.pair1) {
+                    pair1.won += 1;
+                    pair1.points += 3;
+                    pair2.lost += 1;
+                } else {
+                    pair2.won += 1;
+                    pair2.points += 3;
+                    pair1.lost += 1;
+                }
+
+                pair1.setsFor += setsTeam1;
+                pair1.setsAgainst += setsTeam2;
+                pair1.gamesFor += set1_1 + set2_1;
+                pair1.gamesAgainst += set1_2 + set2_2;
+
+                pair2.setsFor += setsTeam2;
+                pair2.setsAgainst += setsTeam1;
+                pair2.gamesFor += set1_2 + set2_2;
+                pair2.gamesAgainst += set1_1 + set2_1;
+            });
+
+            // Calculate final positions
+            const sortedPairs = sortStandings(tournament.pairs);
+            sortedPairs.forEach((pair, index) => {
+                pair.finalPosition = index + 1;
+            });
+
+            // Update player stats
+            tournament.pairs.forEach(pair => {
+                pair.players.forEach(playerId => {
+                    const player = season.players.find(p => p.id === playerId);
+                    if (player) {
+                        player.totalWins += pair.won;
+                        player.totalLosses += pair.lost;
+                        
+                        if (pair.finalPosition === 1) {
+                            player.titles += 1;
+                        } else if (pair.finalPosition === 2) {
+                            player.runnerUps += 1;
+                        }
+
+                        if (!player.tournaments) player.tournaments = [];
+                        player.tournaments.push({
+                            tournamentId: tournament.id,
+                            tournamentName: tournament.name,
+                            position: pair.finalPosition,
+                            date: tournament.date
+                        });
+                    }
+                });
+            });
+
+            // Assign random MVP to champion pair
+            const championPair = sortedPairs[0];
+            if (championPair) {
+                const mvpPlayerId = championPair.players[Math.floor(Math.random() * championPair.players.length)];
+                if (!tournament.awards) tournament.awards = {};
+                tournament.awards.mvp = mvpPlayerId;
+            }
+
+            tournament.status = 'completed';
+
+            saveData(appData);
+            recalculateAllRankings();
+            renderTournamentsList();
+            renderStandings();
+
+            showNotification('Torneo completado (DEMO) - Rankings actualizados con bonificaciones', 'success');
+        }
+
+        // ============================================
+        // FIXTURE GENERATION (MODULE 5 - FIXED)
+        // ============================================
+
+        let currentMatchId = null;
+        let currentTournamentId = null;
+
+        function generateFixture() {
+            const select = document.getElementById('calendarTournamentSelect');
+            const tournamentId = select.value;
+            
+            if (!tournamentId) {
+                alert('Por favor selecciona un torneo primero');
+                return;
+            }
+
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            
+            if (!tournament) return;
+
+            if (tournament.matches && tournament.matches.length > 0) {
+                if (!confirm('Este torneo ya tiene partidos generados. ¿Deseas regenerar el fixture? Esto eliminará los resultados existentes.')) {
+                    return;
+                }
+            }
+
+            tournament.matches = [];
+
+            if (tournament.type === 'cup') {
+                generateCupFixture(tournament);
+            } else {
+                generateLeagueFixture(tournament);
+            }
+
+            saveData(appData);
+            renderCalendar();
+        }
+
+        // Generate league fixture with circle rotation
+        function generateLeagueFixture(tournament) {
+            const pairs = tournament.pairs;
+            const numPairs = pairs.length;
+
+            const needsBye = numPairs % 2 !== 0;
+            const totalPairs = needsBye ? numPairs + 1 : numPairs;
+
+            const totalRounds = totalPairs - 1;
+            const matchesPerRound = totalPairs / 2;
+
+            let pairIds = pairs.map(p => p.id);
+            if (needsBye) {
+                pairIds.push('BYE');
+            }
+
+            let matchId = 1;
+
+            for (let round = 1; round <= totalRounds; round++) {
+                for (let i = 0; i < matchesPerRound; i++) {
+                    const home = pairIds[i];
+                    const away = pairIds[totalPairs - 1 - i];
+
+                    if (home === 'BYE' || away === 'BYE') {
+                        continue;
+                    }
+
+                    const pair1 = pairs.find(p => p.id === home);
+                    const pair2 = pairs.find(p => p.id === away);
+
+                    const match = {
+                        id: 'm' + matchId,
+                        round: round,
+                        pair1: pair1.id,
+                        pair2: pair2.id,
+                        pair1Players: pair1.players,
+                        pair2Players: pair2.players,
+                        status: 'pending',
+                        result: null,
+                        type: 'regular'
+                    };
+
+                    tournament.matches.push(match);
+                    matchId++;
+                }
+
+                const fixed = pairIds[0];
+                const rotated = pairIds.slice(1);
+                rotated.unshift(rotated.pop());
+                pairIds = [fixed, ...rotated];
+            }
+
+            if (tournament.rounds === 2) {
+                const firstRoundMatches = [...tournament.matches];
+                const totalFirstRoundRounds = totalRounds;
+
+                firstRoundMatches.forEach(match => {
+                    const reverseMatch = {
+                        id: 'm' + matchId,
+                        round: match.round + totalFirstRoundRounds,
+                        pair1: match.pair2,
+                        pair2: match.pair1,
+                        pair1Players: match.pair2Players,
+                        pair2Players: match.pair1Players,
+                        status: 'pending',
+                        result: null,
+                        type: 'regular'
+                    };
+                    
+                    tournament.matches.push(reverseMatch);
+                    matchId++;
+                });
+            }
+
+            const totalRoundsText = tournament.rounds === 2 ? (totalRounds * 2) : totalRounds;
+            showNotification(`Fixture de liga generado: ${tournament.matches.length} partidos en ${totalRoundsText} rondas`, 'success');
+        }
+
+        // Generate cup fixture (by groups)
+        function generateCupFixture(tournament) {
+            if (!tournament.groups || tournament.groups.length === 0) {
+                alert('Error: El torneo de copa no tiene grupos definidos');
+                return;
+            }
+
+            let matchId = 1;
+            const allPairs = tournament.pairs;
+
+            tournament.groups.forEach(group => {
+                const groupPairs = group.pairs.map(pairId => 
+                    allPairs.find(p => p.id === pairId)
+                ).filter(p => p);
+
+                const numPairs = groupPairs.length;
+                const needsBye = numPairs % 2 !== 0;
+                const totalPairs = needsBye ? numPairs + 1 : numPairs;
+                const totalRounds = totalPairs - 1;
+                const matchesPerRound = totalPairs / 2;
+
+                let pairIds = groupPairs.map(p => p.id);
+                if (needsBye) {
+                    pairIds.push('BYE');
+                }
+
+                for (let round = 1; round <= totalRounds; round++) {
+                    for (let i = 0; i < matchesPerRound; i++) {
+                        const home = pairIds[i];
+                        const away = pairIds[totalPairs - 1 - i];
+
+                        if (home === 'BYE' || away === 'BYE') {
+                            continue;
+                        }
+
+                        const pair1 = groupPairs.find(p => p.id === home);
+                        const pair2 = groupPairs.find(p => p.id === away);
+
+                        const match = {
+                            id: 'm' + matchId,
+                            round: round,
+                            groupId: group.id,
+                            groupName: group.name,
+                            pair1: pair1.id,
+                            pair2: pair2.id,
+                            pair1Players: pair1.players,
+                            pair2Players: pair2.players,
+                            status: 'pending',
+                            result: null,
+                            type: 'group_stage'
+                        };
+
+                        tournament.matches.push(match);
+                        matchId++;
+                    }
+
+                    const fixed = pairIds[0];
+                    const rotated = pairIds.slice(1);
+                    rotated.unshift(rotated.pop());
+                    pairIds = [fixed, ...rotated];
+                }
+
+                // Second round if needed
+                if (tournament.rounds === 2) {
+                    const groupMatches = tournament.matches.filter(m => m.groupId === group.id);
+                    const totalFirstRounds = totalRounds;
+
+                    groupMatches.forEach(match => {
+                        const reverseMatch = {
+                            id: 'm' + matchId,
+                            round: match.round + totalFirstRounds,
+                            groupId: group.id,
+                            groupName: group.name,
+                            pair1: match.pair2,
+                            pair2: match.pair1,
+                            pair1Players: match.pair2Players,
+                            pair2Players: match.pair1Players,
+                            status: 'pending',
+                            result: null,
+                            type: 'group_stage'
+                        };
+                        
+                        tournament.matches.push(reverseMatch);
+                        matchId++;
+                    });
+                }
+            });
+
+            showNotification(`Fixture de copa generado: ${tournament.matches.length} partidos por grupos`, 'success');
+        }
+
+        // ============================================
+        // CALENDAR RENDERING
+        // ============================================
+
+        function populateCalendarTournamentSelect() {
+            const season = appData.seasons[appData.currentSeason];
+            const select = document.getElementById('calendarTournamentSelect');
+            
+            let html = '<option value="">Seleccionar torneo...</option>';
+            season.tournaments.forEach(tournament => {
+                html += '<option value="' + tournament.id + '">' + tournament.name + '</option>';
+            });
+            
+            select.innerHTML = html;
+        }
+
+        function renderCalendar() {
+            const select = document.getElementById('calendarTournamentSelect');
+            const tournamentId = select.value;
+            const container = document.getElementById('calendarContent');
+
+            if (!tournamentId) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Selecciona un torneo para ver el calendario</p>';
+                return;
+            }
+
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            
+            if (!tournament) return;
+
+            if (!tournament.matches || tournament.matches.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning">Este torneo no tiene partidos generados aún. Usa el botón "⚡ Generar Fixture".</div>';
+                return;
+            }
+
+            let html = '';
+
+            // COPAS: Mostrar por grupos
+            if (tournament.type === 'cup' && tournament.groups && tournament.groups.length > 0) {
+                // Show groups info
+                html += '<div class="card" style="margin-bottom: 1.5rem; background: var(--bg-light);">';
+                html += '<h3 style="margin-bottom: 1rem;">🎲 Sorteo de Grupos (por bombos según ranking)</h3>';
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+                
+                tournament.groups.forEach(group => {
+                    html += '<div style="background: var(--bg-white); padding: 1rem; border-radius: 5px; border: 2px solid var(--primary);">';
+                    html += '<h4 style="color: var(--primary); margin-bottom: 0.5rem;">' + group.name + '</h4>';
+                    
+                    group.pairs.forEach(pairId => {
+                        const pair = tournament.pairs.find(p => p.id === pairId);
+                        if (pair) {
+                            html += '<div style="padding: 0.25rem 0; font-size: 0.9rem;">• ' + pair.name + '</div>';
+                        }
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                html += '</div>';
+
+                // Render matches BY GROUP
+                tournament.groups.forEach(group => {
+                    const groupMatches = tournament.matches.filter(m => m.groupId === group.id);
+                    
+                    if (groupMatches.length === 0) return;
+
+                    const completed = groupMatches.filter(m => m.status === 'completed' || m.status === 'walkover').length;
+                    const total = groupMatches.length;
+
+                    html += '<div class="group-section">';
+                    html += '<div class="group-header">';
+                    html += '<div><strong>📋 ' + group.name + '</strong></div>';
+                    html += '<div class="week-progress">' + completed + ' / ' + total + ' partidos completados</div>';
+                    html += '</div>';
+
+                    // Group by rounds within each group
+                    const matchesByRound = {};
+                    groupMatches.forEach(match => {
+                        const roundNum = match.round || 1;
+                        if (!matchesByRound[roundNum]) {
+                            matchesByRound[roundNum] = [];
+                        }
+                        matchesByRound[roundNum].push(match);
+                    });
+
+                    const rounds = Object.keys(matchesByRound).sort((a, b) => parseInt(a) - parseInt(b));
+                    rounds.forEach(round => {
+                        html += '<div style="margin-left: 1rem; margin-bottom: 1rem;">';
+                        html += '<h4 style="color: var(--text-light); margin-bottom: 0.5rem; font-size: 0.95rem;">Ronda ' + round + '</h4>';
+                        matchesByRound[round].forEach(match => {
+                            html += renderMatchCard(match, tournament);
+                        });
+                        html += '</div>';
+                    });
+
+                    html += '</div>';
+                });
+            } else {
+                // LIGAS: Mostrar por rondas (sin grupos)
+                const matchesByRound = {};
+                tournament.matches.forEach(match => {
+                    const roundNum = match.round || match.week || 1;
+                    if (!matchesByRound[roundNum]) {
+                        matchesByRound[roundNum] = [];
+                    }
+                    matchesByRound[roundNum].push(match);
+                });
+
+                const rounds = Object.keys(matchesByRound).sort((a, b) => parseInt(a) - parseInt(b));
+
+                rounds.forEach(round => {
+                    const roundMatches = matchesByRound[round];
+                    const completed = roundMatches.filter(m => m.status === 'completed' || m.status === 'walkover').length;
+                    const total = roundMatches.length;
+
+                    html += '<div class="week-section">';
+                    html += '<div class="week-header">';
+                    html += '<div><strong>Ronda ' + round + '</strong></div>';
+                    html += '<div class="week-progress">' + completed + ' / ' + total + ' partidos completados</div>';
+                    html += '</div>';
+
+                    roundMatches.forEach(match => {
+                        html += renderMatchCard(match, tournament);
+                    });
+
+                    html += '</div>';
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderMatchCard(match, tournament) {
+            const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+            const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+
+            if (!pair1 || !pair2) return '';
+
+            const statusClass = match.status === 'completed' ? 'completed' : 
+                               match.status === 'walkover' ? 'walkover' : 'pending';
+
+            const statusBadge = match.status === 'completed' ? '<span class="badge" style="background: #4CAF50; color: white;">✓ Jugado</span>' :
+                               match.status === 'walkover' ? '<span class="badge" style="background: #FF9800; color: white;">W.O.</span>' :
+                               '<span class="badge" style="background: #9E9E9E; color: white;">Pendiente</span>';
+
+            let html = '<div class="match-card ' + statusClass + '">';
+            html += '<div class="match-header">';
+            html += '<div>';
+            
+            // Only show group badge for cups with groups
+            if (tournament.type === 'cup' && match.groupName) {
+                html += '<span class="badge" style="background: var(--primary); color: white; margin-right: 0.5rem;">' + match.groupName + '</span>';
+            }
+            
+            html += statusBadge;
+            html += '</div>';
+            
+            if (match.status === 'pending' && tournament.status === 'active') {
+                html += '<button class="btn btn-primary" style="font-size: 0.9rem; padding: 0.5rem 1rem;" onclick="openMatchResultModal(\'' + tournament.id + '\', \'' + match.id + '\')">Registrar Resultado</button>';
+            }
+            
+            html += '</div>';
+            html += '<div class="match-teams">';
+
+            const isPair1Winner = match.result && match.result.winner === match.pair1;
+            html += '<div class="match-team ' + (isPair1Winner ? 'winner' : '') + '">';
+            html += '<span><strong>' + pair1.name + '</strong></span>';
+            if (match.result) {
+                html += '<span class="match-score">' + (match.result.sets1 || '0') + '</span>';
+            }
+            html += '</div>';
+
+            const isPair2Winner = match.result && match.result.winner === match.pair2;
+            html += '<div class="match-team ' + (isPair2Winner ? 'winner' : '') + '">';
+            html += '<span><strong>' + pair2.name + '</strong></span>';
+            if (match.result) {
+                html += '<span class="match-score">' + (match.result.sets2 || '0') + '</span>';
+            }
+            html += '</div>';
+
+            html += '</div>';
+
+            if (match.result && match.result.sets) {
+                html += '<div style="margin-top: 0.5rem; color: var(--text-light); font-size: 0.9rem;">';
+                html += 'Sets: ';
+                match.result.sets.forEach((set, index) => {
+                    if (index > 0) html += ', ';
+                    html += set.team1 + '-' + set.team2;
+                });
+                html += '</div>';
+            }
+
+            if (match.status === 'walkover' && match.walkoverReason) {
+                html += '<div style="margin-top: 0.5rem; color: var(--warning); font-size: 0.85rem;">';
+                html += '⚠️ ' + getWalkoverReasonText(match.walkoverReason);
+                html += '</div>';
+            }
+
+            html += '</div>';
+
+            return html;
+        }
+
+        function getWalkoverReasonText(reason) {
+            switch(reason) {
+                case 'late_5_14': return 'Atraso 5-14 minutos';
+                case 'late_15_plus': return 'Atraso 15+ minutos';
+                case 'no_show': return 'No se presentó';
+                case 'injury': return 'Lesión';
+                default: return reason;
+            }
+        }
+
+        // ============================================
+        // MATCH RESULT MODAL
+        // ============================================
+
+        function openMatchResultModal(tournamentId, matchId) {
+            currentTournamentId = tournamentId;
+            currentMatchId = matchId;
+
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            const match = tournament.matches.find(m => m.id === matchId);
+
+            if (!match || !tournament) return;
+
+            const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+            const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+
+            const matchInfo = document.getElementById('matchInfo');
+            matchInfo.innerHTML = '<div style="text-align: center; padding: 1rem; background: var(--bg-light); border-radius: 5px;"><strong>' + pair1.name + '</strong> vs <strong>' + pair2.name + '</strong></div>';
+
+            const walkoverWinner = document.getElementById('walkoverWinner');
+            walkoverWinner.innerHTML = '<option value="">Seleccionar...</option>';
+            walkoverWinner.innerHTML += '<option value="' + pair1.id + '">' + pair1.name + '</option>';
+            walkoverWinner.innerHTML += '<option value="' + pair2.id + '">' + pair2.name + '</option>';
+
+            document.getElementById('isWalkover').checked = false;
+            document.getElementById('isIncompleteMatch').checked = false;
+            document.getElementById('set1Team1').value = '';
+            document.getElementById('set1Team2').value = '';
+            document.getElementById('set2Team1').value = '';
+            document.getElementById('set2Team2').value = '';
+            document.getElementById('set3Team1').value = '';
+            document.getElementById('set3Team2').value = '';
+            document.getElementById('walkoverReason').value = '';
+            document.getElementById('customReason').value = '';
+            document.getElementById('matchResultError').style.display = 'none';
+            
+            toggleWalkoverMode();
+
+            document.getElementById('matchResultModal').classList.add('active');
+        }
+
+        function closeMatchResultModal() {
+            document.getElementById('matchResultModal').classList.remove('active');
+            currentMatchId = null;
+            currentTournamentId = null;
+        }
+
+        function toggleWalkoverMode() {
+            const isWalkover = document.getElementById('isWalkover').checked;
+            const normalSection = document.getElementById('normalMatchSection');
+            const walkoverSection = document.getElementById('walkoverSection');
+
+            if (isWalkover) {
+                normalSection.style.display = 'none';
+                walkoverSection.style.display = 'block';
+            } else {
+                normalSection.style.display = 'block';
+                walkoverSection.style.display = 'none';
+            }
+        }
+
+        function toggleCustomReason() {
+            const reason = document.getElementById('walkoverReason').value;
+            const customGroup = document.getElementById('customReasonGroup');
+            customGroup.style.display = reason === 'other' ? 'block' : 'none';
+        }
+
+        function validateTennisScore(games1, games2, isIncomplete) {
+            games1 = parseInt(games1) || 0;
+            games2 = parseInt(games2) || 0;
+
+            if (isIncomplete) {
+                return true;
+            }
+
+            if (games1 === 0 && games2 === 0) {
+                return true;
+            }
+
+            const validEndings = [
+                [6, 0], [6, 1], [6, 2], [6, 3], [6, 4],
+                [0, 6], [1, 6], [2, 6], [3, 6], [4, 6],
+                [7, 5], [5, 7],
+                [7, 6], [6, 7]
+            ];
+
+            return validEndings.some(ending => 
+                ending[0] === games1 && ending[1] === games2
+            );
+        }
+
+        function saveMatchResult() {
+            const isWalkover = document.getElementById('isWalkover').checked;
+            const errorDiv = document.getElementById('matchResultError');
+            errorDiv.style.display = 'none';
+
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === currentTournamentId);
+            const match = tournament.matches.find(m => m.id === currentMatchId);
+
+            if (!match || !tournament) return;
+
+            if (isWalkover) {
+                const winnerId = document.getElementById('walkoverWinner').value;
+                const reason = document.getElementById('walkoverReason').value;
+                const customReason = document.getElementById('customReason').value;
+
+                if (!winnerId || !reason) {
+                    alert('Por favor completa todos los campos requeridos');
+                    return;
+                }
+
+                const loserId = winnerId === match.pair1 ? match.pair2 : match.pair1;
+                const loserPair = tournament.pairs.find(p => p.id === loserId);
+
+                match.status = 'walkover';
+                match.walkoverReason = reason === 'other' ? customReason : reason;
+                match.result = {
+                    winner: winnerId,
+                    loser: loserId,
+                    sets1: winnerId === match.pair1 ? 2 : 0,
+                    sets2: winnerId === match.pair2 ? 2 : 0,
+                    sets: [
+                        { team1: winnerId === match.pair1 ? 6 : 0, team2: winnerId === match.pair2 ? 6 : 0 },
+                        { team1: winnerId === match.pair1 ? 6 : 0, team2: winnerId === match.pair2 ? 6 : 0 }
+                    ],
+                    isWalkover: true
+                };
+
+                let penaltyPoints = 0;
+                if (reason === 'late_5_14') {
+                    penaltyPoints = -2;
+                } else if (reason === 'late_15_plus' || reason === 'no_show') {
+                    penaltyPoints = -3;
+                }
+
+                if (penaltyPoints !== 0) {
+                    loserPair.points += penaltyPoints;
+                    
+                    if (!tournament.penalties) tournament.penalties = [];
+                    tournament.penalties.push({
+                        pairId: loserId,
+                        playerId: null,
+                        points: Math.abs(penaltyPoints),
+                        reason: match.walkoverReason,
+                        date: new Date().toISOString(),
+                        matchId: match.id
+                    });
+                }
+
+                const winnerPair = tournament.pairs.find(p => p.id === winnerId);
+                winnerPair.played += 1;
+                winnerPair.won += 1;
+                winnerPair.points += 3;
+                winnerPair.setsFor += 2;
+
+                loserPair.played += 1;
+                loserPair.lost += 1;
+                loserPair.setsAgainst += 2;
+
+            } else {
+                const isIncomplete = document.getElementById('isIncompleteMatch').checked;
+                const set1_1 = document.getElementById('set1Team1').value;
+                const set1_2 = document.getElementById('set1Team2').value;
+                const set2_1 = document.getElementById('set2Team1').value;
+                const set2_2 = document.getElementById('set2Team2').value;
+                const set3_1 = document.getElementById('set3Team1').value;
+                const set3_2 = document.getElementById('set3Team2').value;
+
+                if (!set1_1 || !set1_2 || !set2_1 || !set2_2) {
+                    errorDiv.textContent = 'Los primeros dos sets son obligatorios';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                if (!validateTennisScore(set1_1, set1_2, isIncomplete)) {
+                    errorDiv.textContent = 'Set 1: Marcador inválido de tenis';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                if (!validateTennisScore(set2_1, set2_2, isIncomplete)) {
+                    errorDiv.textContent = 'Set 2: Marcador inválido de tenis';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                if ((set3_1 || set3_2) && !validateTennisScore(set3_1, set3_2, isIncomplete)) {
+                    errorDiv.textContent = 'Set 3: Marcador inválido de tenis';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                const sets = [
+                    { team1: parseInt(set1_1), team2: parseInt(set1_2) },
+                    { team1: parseInt(set2_1), team2: parseInt(set2_2) }
+                ];
+
+                if (set3_1 && set3_2) {
+                    sets.push({ team1: parseInt(set3_1), team2: parseInt(set3_2) });
+                }
+
+                let setsTeam1 = 0;
+                let setsTeam2 = 0;
+                let gamesTeam1 = 0;
+                let gamesTeam2 = 0;
+
+                sets.forEach(set => {
+                    if (set.team1 > set.team2) setsTeam1++;
+                    else if (set.team2 > set.team1) setsTeam2++;
+                    gamesTeam1 += set.team1;
+                    gamesTeam2 += set.team2;
+                });
+
+                const winner = setsTeam1 > setsTeam2 ? match.pair1 : match.pair2;
+                const loser = winner === match.pair1 ? match.pair2 : match.pair1;
+
+                match.status = 'completed';
+                match.winner = winner;
+                match.result = {
+                    winner: winner,
+                    loser: loser,
+                    sets1: setsTeam1,
+                    sets2: setsTeam2,
+                    games1: gamesTeam1,
+                    games2: gamesTeam2,
+                    sets: sets,
+                    isIncomplete: isIncomplete
+                };
+
+                const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+                const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+
+                pair1.played += 1;
+                pair2.played += 1;
+
+                if (winner === match.pair1) {
+                    pair1.won += 1;
+                    pair1.points += 3;
+                    pair2.lost += 1;
+                } else {
+                    pair2.won += 1;
+                    pair2.points += 3;
+                    pair1.lost += 1;
+                }
+
+                pair1.setsFor += setsTeam1;
+                pair1.setsAgainst += setsTeam2;
+                pair1.gamesFor += gamesTeam1;
+                pair1.gamesAgainst += gamesTeam2;
+
+                pair2.setsFor += setsTeam2;
+                pair2.setsAgainst += setsTeam1;
+                pair2.gamesFor += gamesTeam2;
+                pair2.gamesAgainst += gamesTeam1;
+            }
+
+            saveData(appData);
+            closeMatchResultModal();
+            renderCalendar();
+            renderStandings();
+            
+            showNotification('Resultado registrado correctamente', 'success');
+        }
+
+        // ============================================
+        // STANDINGS (MODULE 6)
+        // ============================================
+
+        function populateStandingsTournamentSelect() {
+            const season = appData.seasons[appData.currentSeason];
+            const select = document.getElementById('standingsTournamentSelect');
+            
+            let html = '<option value="">Seleccionar torneo...</option>';
+            season.tournaments.forEach(tournament => {
+                html += '<option value="' + tournament.id + '">' + tournament.name + '</option>';
+            });
+            
+            select.innerHTML = html;
+        }
+
+        function renderStandings() {
+            const select = document.getElementById('standingsTournamentSelect');
+            const tournamentId = select.value;
+            const container = document.getElementById('standingsContent');
+
+            if (!tournamentId) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Selecciona un torneo para ver la tabla de posiciones</p>';
+                return;
+            }
+
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            
+            if (!tournament) return;
+
+            if (!tournament.pairs || tournament.pairs.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning">Este torneo no tiene parejas definidas</div>';
+                return;
+            }
+
+            let html = '';
+
+            // COPAS: Mostrar tabla separada por grupos
+            if (tournament.type === 'cup' && tournament.groups && tournament.groups.length > 0) {
+                html += '<div class="alert alert-info" style="margin-bottom: 1.5rem;">';
+                html += '<span>ℹ️</span>';
+                html += '<div><strong>Copa Express:</strong> Tabla de posiciones por grupo. Los primeros 2 de cada grupo clasifican a semifinales.</div>';
+                html += '</div>';
+
+                tournament.groups.forEach((group, index) => {
+                    const groupPairs = group.pairs.map(pairId => 
+                        tournament.pairs.find(p => p.id === pairId)
+                    ).filter(p => p);
+
+                    const sortedPairs = sortStandings(groupPairs);
+
+                    html += '<div class="card" style="margin-bottom: 1.5rem;">';
+                    html += '<h3 style="margin-bottom: 1rem; color: var(--primary);">📋 ' + group.name + '</h3>';
+                    html += renderStandingsTable(sortedPairs, true); // true = show qualified indicator
+                    html += '</div>';
+                });
+            } else {
+                // LIGAS: Mostrar tabla única sin grupos
+                html += '<div class="alert alert-info" style="margin-bottom: 1.5rem;">';
+                html += '<span>ℹ️</span>';
+                html += '<div><strong>Liga Regular:</strong> Tabla de posiciones general. Los mejores clasifican a playoffs.</div>';
+                html += '</div>';
+
+                const sortedPairs = sortStandings(tournament.pairs);
+                html += '<div class="card">';
+                html += renderStandingsTable(sortedPairs, false); // false = don't show qualified indicator
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function sortStandings(pairs) {
+            return [...pairs].sort((a, b) => {
+                // 1. Points
+                if (b.points !== a.points) return b.points - a.points;
+                
+                // 2. Set difference
+                const setDiffA = a.setsFor - a.setsAgainst;
+                const setDiffB = b.setsFor - b.setsAgainst;
+                if (setDiffB !== setDiffA) return setDiffB - setDiffA;
+                
+                // 3. Game difference
+                const gameDiffA = a.gamesFor - a.gamesAgainst;
+                const gameDiffB = b.gamesFor - b.gamesAgainst;
+                if (gameDiffB !== gameDiffA) return gameDiffB - gameDiffA;
+                
+                // 4. Head to head (would need to implement)
+                return 0;
+            });
+        }
+
+        function renderStandingsTable(pairs, showQualified) {
+            let html = '<div class="table-container">';
+            html += '<table>';
+            html += '<thead><tr>';
+            html += '<th>Pos</th>';
+            html += '<th>Pareja</th>';
+            html += '<th>PJ</th>';
+            html += '<th>PG</th>';
+            html += '<th>PP</th>';
+            html += '<th>Pts</th>';
+            html += '<th>SF</th>';
+            html += '<th>SC</th>';
+            html += '<th>Diff Sets</th>';
+            html += '<th>GF</th>';
+            html += '<th>GC</th>';
+            html += '<th>Diff Games</th>';
+            html += '</tr></thead>';
+            html += '<tbody>';
+
+            pairs.forEach((pair, index) => {
+                const position = index + 1;
+                const setDiff = pair.setsFor - pair.setsAgainst;
+                const gameDiff = pair.gamesFor - pair.gamesAgainst;
+                
+                const qualifiedClass = showQualified && position <= 2 ? ' standings-qualified' : '';
+                
+                html += '<tr class="' + qualifiedClass + '">';
+                html += '<td><strong>' + position + '</strong></td>';
+                html += '<td><strong>' + pair.name + '</strong></td>';
+                html += '<td>' + pair.played + '</td>';
+                html += '<td>' + pair.won + '</td>';
+                html += '<td>' + pair.lost + '</td>';
+                html += '<td><strong>' + pair.points + '</strong></td>';
+                html += '<td>' + pair.setsFor + '</td>';
+                html += '<td>' + pair.setsAgainst + '</td>';
+                html += '<td>' + (setDiff >= 0 ? '+' : '') + setDiff + '</td>';
+                html += '<td>' + pair.gamesFor + '</td>';
+                html += '<td>' + pair.gamesAgainst + '</td>';
+                html += '<td>' + (gameDiff >= 0 ? '+' : '') + gameDiff + '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody>';
+            html += '</table>';
+            html += '</div>';
+
+            if (showQualified) {
+                html += '<div style="margin-top: 1rem; padding: 1rem; background: rgba(76, 175, 80, 0.1); border-left: 4px solid var(--success); border-radius: 5px;">';
+                html += '✓ Los primeros 2 clasifican a semifinales';
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        // ============================================
+        // PLAYOFFS (MODULE 7)
+        // ============================================
+
+        function populatePlayoffsTournamentSelect() {
+            const season = appData.seasons[appData.currentSeason];
+            const select = document.getElementById('playoffsTournamentSelect');
+            
+            let html = '<option value="">Seleccionar torneo...</option>';
+            season.tournaments.forEach(tournament => {
+                html += '<option value="' + tournament.id + '">' + tournament.name + '</option>';
+            });
+            
+            select.innerHTML = html;
+        }
+
+        function renderPlayoffs() {
+            const select = document.getElementById('playoffsTournamentSelect');
+            const tournamentId = select.value;
+            const container = document.getElementById('playoffsContent');
+
+            if (!tournamentId) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Selecciona un torneo para ver los playoffs</p>';
+                return;
+            }
+
+            const season = appData.seasons[appData.currentSeason];
+            const tournament = season.tournaments.find(t => t.id === tournamentId);
+            
+            if (!tournament) return;
+
+            let html = '<div class="alert alert-info">';
+            html += '<span>ℹ️</span>';
+            html += '<div>Los playoffs se generan automáticamente cuando se completa la fase de grupos. Esta funcionalidad estará disponible próximamente.</div>';
+            html += '</div>';
+
+            // Placeholder for bracket
+            html += '<div class="bracket-container">';
+            html += '<div class="bracket-round">';
+            html += '<h3 style="text-align: center; margin-bottom: 1rem;">Semifinales</h3>';
+            html += '<div class="bracket-match">';
+            html += '<div class="bracket-team">1º Grupo A <span class="bracket-score">-</span></div>';
+            html += '<div class="bracket-team">2º Grupo B <span class="bracket-score">-</span></div>';
+            html += '</div>';
+            html += '<div class="bracket-match">';
+            html += '<div class="bracket-team">1º Grupo B <span class="bracket-score">-</span></div>';
+            html += '<div class="bracket-team">2º Grupo A <span class="bracket-score">-</span></div>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="bracket-round">';
+            html += '<h3 style="text-align: center; margin-bottom: 1rem;">Final</h3>';
+            html += '<div class="bracket-match">';
+            html += '<div class="bracket-team">Ganador SF1 <span class="bracket-score">-</span></div>';
+            html += '<div class="bracket-team">Ganador SF2 <span class="bracket-score">-</span></div>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="bracket-round">';
+            html += '<h3 style="text-align: center; margin-bottom: 1rem;">Campeón</h3>';
+            html += '<div class="bracket-match" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">';
+            html += '<div style="text-align: center;">';
+            html += '<div style="font-size: 3rem;">🏆</div>';
+            html += '<div style="margin-top: 1rem; font-weight: bold;">Ganador Final</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // DATA MANAGEMENT
+        // ============================================
+
+        function updateDataDashboard() {
+            const season = appData.seasons[appData.currentSeason];
+            
+            document.getElementById('dataCurrentSeason').textContent = appData.currentSeason;
+            document.getElementById('dataPlayerCount').textContent = season.players.length;
+            document.getElementById('dataTournamentCount').textContent = season.tournaments.length;
+            
+            const dataSize = new Blob([JSON.stringify(appData)]).size;
+            const sizeKB = (dataSize / 1024).toFixed(2);
+            document.getElementById('dataStorageSize').textContent = sizeKB + ' KB';
+        }
+
+        function exportBackup() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'padel-backup-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('Backup exportado correctamente', 'success');
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.version || !importedData.seasons) {
+                        alert('Archivo de backup inválido');
+                        return;
+                    }
+
+                    if (confirm('¿Estás seguro de que deseas importar este backup? Esto reemplazará todos los datos actuales.')) {
+                        appData = importedData;
+                        saveData(appData);
+                        location.reload();
+                    }
+                } catch (error) {
+                    alert('Error al leer el archivo: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function deleteCurrentSeasonData() {
+            if (!confirm('¿Estás seguro de que deseas borrar TODOS los datos de la temporada ' + appData.currentSeason + '?\n\nEsta acción NO se puede deshacer.')) {
+                return;
+            }
+
+            if (!confirm('ÚLTIMA CONFIRMACIÓN: Se borrarán todos los jugadores, torneos y estadísticas de la temporada ' + appData.currentSeason + '. ¿Continuar?')) {
+                return;
+            }
+
+            appData.seasons[appData.currentSeason] = {
+                players: [],
+                tournaments: []
+            };
+
+            saveData(appData);
+            location.reload();
+        }
+
+        function deleteAllData() {
+            if (!confirm('¿Estás seguro de que deseas borrar TODOS los datos de TODAS las temporadas?\n\nEsta acción NO se puede deshacer.')) {
+                return;
+            }
+
+            if (!confirm('ÚLTIMA CONFIRMACIÓN: Se borrarán TODOS los datos del sistema. ¿Continuar?')) {
+                return;
+            }
+
+            appData = getDefaultData();
+            saveData(appData);
+            location.reload();
+        }
+
+        function clearAllLocalStorage() {
+            if (!confirm('¿Estás seguro de que deseas limpiar TODO el LocalStorage?\n\nEsto incluye datos, configuraciones y preferencias.\n\nEsta acción NO se puede deshacer.')) {
+                return;
+            }
+
+            localStorage.clear();
+            location.reload();
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Sistema de Liga de Pádel inicializado');
+            console.log('Datos cargados:', appData);
+            
+            renderDashboard();
+            
+            document.getElementById('currentSeason').textContent = appData.currentSeason;
+            document.getElementById('totalPlayers').textContent = appData.seasons[appData.currentSeason].players.length;
+        });
+    </script>
+</body>
+</html>
+                
