@@ -2395,81 +2395,154 @@
         let currentMatchId = null;
         let currentTournamentId = null;
 
-        // Generate round-robin fixture
-        function generateFixture() {
-            const select = document.getElementById('calendarTournamentSelect');
-            const tournamentId = select.value;
-            
-            if (!tournamentId) {
-                alert('Por favor selecciona un torneo primero');
-                return;
-            }
+// ============================================
+// FIXED: Generate round-robin fixture with Circle Rotation
+// ============================================
 
-            const season = appData.seasons[appData.currentSeason];
-            const tournament = season.tournaments.find(t => t.id === tournamentId);
-            
-            if (!tournament) return;
+function generateFixture() {
+    const select = document.getElementById('calendarTournamentSelect');
+    const tournamentId = select.value;
+    
+    if (!tournamentId) {
+        alert('Por favor selecciona un torneo primero');
+        return;
+    }
 
-            if (tournament.matches && tournament.matches.length > 0) {
-                if (!confirm('Este torneo ya tiene partidos generados. ¿Deseas regenerar el fixture? Esto eliminará los resultados existentes.')) {
-                    return;
-                }
-            }
+    const season = appData.seasons[appData.currentSeason];
+    const tournament = season.tournaments.find(t => t.id === tournamentId);
+    
+    if (!tournament) return;
 
-            // Initialize matches array
-            tournament.matches = [];
-
-            const pairs = tournament.pairs;
-            const numPairs = pairs.length;
-            const matchesPerWeek = 2; // Each pair plays 2 matches per week
-            
-            // Round robin algorithm
-            let matchId = 1;
-            let weekNum = 1;
-            let weekMatches = [];
-            let pairMatchCount = {};
-            
-            // Initialize match count for each pair
-            pairs.forEach(pair => {
-                pairMatchCount[pair.id] = 0;
-            });
-
-            // Generate all possible matches
-            for (let i = 0; i < numPairs; i++) {
-                for (let j = i + 1; j < numPairs; j++) {
-                    const match = {
-                        id: 'm' + matchId,
-                        week: weekNum,
-                        pair1: pairs[i].id,
-                        pair2: pairs[j].id,
-                        pair1Players: pairs[i].players,
-                        pair2Players: pairs[j].players,
-                        status: 'pending',
-                        result: null,
-                        type: 'regular'
-                    };
-                    
-                    tournament.matches.push(match);
-                    matchId++;
-
-                    // Track matches per pair for week distribution
-                    pairMatchCount[pairs[i].id]++;
-                    pairMatchCount[pairs[j].id]++;
-
-                    // Move to next week when appropriate (approximately 2 matches per pair per week)
-                    const avgMatchesPerPair = Object.values(pairMatchCount).reduce((a, b) => a + b, 0) / numPairs;
-                    if (avgMatchesPerPair >= matchesPerWeek * weekNum) {
-                        weekNum++;
-                    }
-                }
-            }
-
-            // Save and refresh
-            saveData(appData);
-            renderCalendar();
-            
-            showNotification('Fixture generado correctamente: ' + tournament.matches.length + ' partidos en ' + weekNum + ' semanas', 'success');
+    if (tournament.matches && tournament.matches.length > 0) {
+        if (!confirm('Este torneo ya tiene partidos generados. ¿Deseas regenerar el fixture? Esto eliminará los resultados existentes.')) {
+            return;
         }
+    }
+
+    // Initialize matches array
+    tournament.matches = [];
+
+    const pairs = tournament.pairs;
+    const numPairs = pairs.length;
+
+    // Para número impar de parejas, agregar un "bye" (pareja fantasma)
+    const needsBye = numPairs % 2 !== 0;
+    const totalPairs = needsBye ? numPairs + 1 : numPairs;
+
+    // Circle Rotation Algorithm
+    // Para N parejas, genera N-1 rondas donde cada pareja juega 1 vez por ronda
+    
+    const totalRounds = totalPairs - 1;
+    const matchesPerRound = totalPairs / 2;
+
+    // Crear array de IDs de parejas para rotar
+    let pairIds = pairs.map(p => p.id);
+    if (needsBye) {
+        pairIds.push('BYE'); // Pareja fantasma
+    }
+
+    let matchId = 1;
+
+    // Generar cada ronda
+    for (let round = 1; round <= totalRounds; round++) {
+        // En cada ronda, emparejar los equipos según circle rotation
+        for (let i = 0; i < matchesPerRound; i++) {
+            const home = pairIds[i];
+            const away = pairIds[totalPairs - 1 - i];
+
+            // Saltear si alguno es BYE
+            if (home === 'BYE' || away === 'BYE') {
+                continue;
+            }
+
+            const pair1 = pairs.find(p => p.id === home);
+            const pair2 = pairs.find(p => p.id === away);
+
+            const match = {
+                id: 'm' + matchId,
+                round: round, // ✅ FIXED: Usar 'round' en lugar de 'week'
+                pair1: pair1.id,
+                pair2: pair2.id,
+                pair1Players: pair1.players,
+                pair2Players: pair2.players,
+                status: 'pending',
+                result: null,
+                type: 'regular'
+            };
+
+            tournament.matches.push(match);
+            matchId++;
+        }
+
+        // Rotar parejas (circle rotation)
+        // El primer elemento permanece fijo, los demás rotan
+        const fixed = pairIds[0];
+        const rotated = pairIds.slice(1);
+        rotated.unshift(rotated.pop()); // Mover último elemento al inicio
+        pairIds = [fixed, ...rotated];
+    }
+
+    // Para ligas con 2 vueltas, duplicar los partidos con parejas invertidas
+    if (tournament.rounds === 2) {
+        const firstRoundMatches = [...tournament.matches];
+        const totalFirstRoundRounds = totalRounds;
+
+        firstRoundMatches.forEach(match => {
+            const reverseMatch = {
+                id: 'm' + matchId,
+                round: match.round + totalFirstRoundRounds, // Segunda vuelta
+                pair1: match.pair2, // ✅ Invertir locales
+                pair2: match.pair1,
+                pair1Players: match.pair2Players,
+                pair2Players: match.pair1Players,
+                status: 'pending',
+                result: null,
+                type: 'regular'
+            };
+            
+            tournament.matches.push(reverseMatch);
+            matchId++;
+        });
+    }
+
+    // Save and refresh
+    saveData(appData);
+    renderCalendar();
+    
+    const totalRoundsText = tournament.rounds === 2 ? (totalRounds * 2) : totalRounds;
+    showNotification(`Fixture generado correctamente: ${tournament.matches.length} partidos en ${totalRoundsText} rondas`, 'success');
+}
+
+// ============================================
+// EJEMPLO DE CÓMO FUNCIONA EL CIRCLE ROTATION
+// ============================================
+/*
+Para 8 parejas (A, B, C, D, E, F, G, H):
+
+Ronda 1:
+  A vs H
+  B vs G
+  C vs F
+  D vs E
+
+Ronda 2 (rotar, A fijo):
+  A vs G
+  H vs F
+  B vs E
+  C vs D
+
+Ronda 3:
+  A vs F
+  G vs E
+  H vs D
+  B vs C
+
+... y así sucesivamente por 7 rondas
+
+Cada pareja juega exactamente 1 partido por ronda
+Cada pareja enfrenta a todas las demás una vez
+Total: N-1 rondas, donde N = número de parejas
+*/
 
         // Render calendar
         function renderCalendar() {
