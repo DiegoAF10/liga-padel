@@ -1572,8 +1572,6 @@
 
     <!-- Tournament Details Modal -->
 <!-- Import Tournament Modal -->
-<!-- Import Tournament Modal -->
-<!-- Import Tournament Modal -->
 <div id="importTournamentModal" class="modal">
     <div class="modal-content" style="max-width: 900px;">
         <div class="modal-header">
@@ -1862,118 +1860,7 @@
     </div>
 </div>
 
-        <div class="alert alert-info">
-            <span>ℹ️</span>
-            <div>
-                Usa esta opción para importar un torneo que ya se jugó la fase de grupos.
-                Solo necesitarás registrar la final y el tercer lugar.
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Nombre del Torneo *</label>
-            <input type="text" class="form-input" id="importTournamentName" placeholder="Ej: Copa Septiembre 2024">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Fecha del Torneo *</label>
-            <input type="date" class="form-input" id="importTournamentDate">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Tipo de Torneo *</label>
-            <select class="form-input" id="importTournamentType">
-                <option value="cup">🏅 Copa Express (Peso 0.7x)</option>
-                <option value="league">🏆 Liga Regular (Peso 1.0x)</option>
-                <option value="special">⭐ Campeonato Especial (Peso 1.5x)</option>
-            </select>
-        </div>
-
-        <h4 style="margin: 2rem 0 1rem 0;">Semifinalistas (4 parejas)</h4>
-        <p style="color: var(--text-light); margin-bottom: 1rem;">Selecciona las 4 parejas que llegaron a semifinales:</p>
-
-        <div id="importSemifinalistsPairs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-            <!-- Semifinal 1 -->
-            <div class="pair-card">
-                <div class="pair-header">Semifinal 1 - Pareja 1</div>
-                <select class="form-input" id="importSF1P1" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 1...</option>
-                </select>
-                <select class="form-input" style="margin-top: 0.5rem;" id="importSF1P2" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 2...</option>
-                </select>
-            </div>
-
-            <div class="pair-card">
-                <div class="pair-header">Semifinal 1 - Pareja 2</div>
-                <select class="form-input" id="importSF1P3" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 1...</option>
-                </select>
-                <select class="form-input" style="margin-top: 0.5rem;" id="importSF1P4" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 2...</option>
-                </select>
-            </div>
-
-            <!-- Semifinal 2 -->
-            <div class="pair-card">
-                <div class="pair-header">Semifinal 2 - Pareja 1</div>
-                <select class="form-input" id="importSF2P1" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 1...</option>
-                </select>
-                <select class="form-input" style="margin-top: 0.5rem;" id="importSF2P2" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 2...</option>
-                </select>
-            </div>
-
-            <div class="pair-card">
-                <div class="pair-header">Semifinal 2 - Pareja 2</div>
-                <select class="form-input" id="importSF2P3" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 1...</option>
-                </select>
-                <select class="form-input" style="margin-top: 0.5rem;" id="importSF2P4" onchange="updateImportPlayerSelections()">
-                    <option value="">Seleccionar jugador 2...</option>
-                </select>
-            </div>
-        </div>
-
-        <h4 style="margin: 2rem 0 1rem 0;">Resultados de Semifinales</h4>
         
-        <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-            <h5 style="margin-bottom: 1rem; color: var(--primary);">Semifinal 1</h5>
-            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
-                <div>
-                    <label class="form-label">Sets Pareja 1</label>
-                    <input type="number" class="form-input" id="importSF1Sets1" min="0" max="2" placeholder="0" style="text-align: center;">
-                </div>
-                <div style="font-size: 2rem; color: var(--text-light);">-</div>
-                <div>
-                    <label class="form-label">Sets Pareja 2</label>
-                    <input type="number" class="form-input" id="importSF1Sets2" min="0" max="2" placeholder="0" style="text-align: center;">
-                </div>
-            </div>
-        </div>
-
-        <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem;">
-            <h5 style="margin-bottom: 1rem; color: var(--primary);">Semifinal 2</h5>
-            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
-                <div>
-                    <label class="form-label">Sets Pareja 1</label>
-                    <input type="number" class="form-input" id="importSF2Sets1" min="0" max="2" placeholder="0" style="text-align: center;">
-                </div>
-                <div style="font-size: 2rem; color: var(--text-light);">-</div>
-                <div>
-                    <label class="form-label">Sets Pareja 2</label>
-                    <input type="number" class="form-input" id="importSF2Sets2" min="0" max="2" placeholder="0" style="text-align: center;">
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-actions">
-            <button type="button" class="btn btn-cancel" onclick="closeImportTournamentModal()">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="finishImportTournament()">Importar Torneo</button>
-        </div>
-    </div>
-</div>    
 <div id="tournamentDetailsModal" class="modal">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
