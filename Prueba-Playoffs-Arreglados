@@ -1127,6 +1127,9 @@
                     <button class="btn btn-primary" onclick="openTournamentWizard()">
                         ➕ Crear Nuevo Torneo
                     </button>
+<button class="btn btn-secondary" onclick="openImportTournamentModal()" style="margin-left: 1rem;">
+    📋 Importar Torneo Jugado
+</button>
                 </div>
                 <div id="tournamentsList"></div>
             </div>
@@ -1568,7 +1571,127 @@
     </div>
 
     <!-- Tournament Details Modal -->
-    <div id="tournamentDetailsModal" class="modal">
+<!-- Import Tournament Modal -->
+<div id="importTournamentModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Importar Torneo Ya Jugado</h3>
+            <button class="modal-close" onclick="closeImportTournamentModal()">✕</button>
+        </div>
+
+        <div class="alert alert-info">
+            <span>ℹ️</span>
+            <div>
+                Usa esta opción para importar un torneo que ya se jugó la fase de grupos.
+                Solo necesitarás registrar la final y el tercer lugar.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Nombre del Torneo *</label>
+            <input type="text" class="form-input" id="importTournamentName" placeholder="Ej: Copa Septiembre 2024">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Fecha del Torneo *</label>
+            <input type="date" class="form-input" id="importTournamentDate">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Tipo de Torneo *</label>
+            <select class="form-input" id="importTournamentType">
+                <option value="cup">🏅 Copa Express (Peso 0.7x)</option>
+                <option value="league">🏆 Liga Regular (Peso 1.0x)</option>
+                <option value="special">⭐ Campeonato Especial (Peso 1.5x)</option>
+            </select>
+        </div>
+
+        <h4 style="margin: 2rem 0 1rem 0;">Semifinalistas (4 parejas)</h4>
+        <p style="color: var(--text-light); margin-bottom: 1rem;">Selecciona las 4 parejas que llegaron a semifinales:</p>
+
+        <div id="importSemifinalistsPairs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+            <!-- Semifinal 1 -->
+            <div class="pair-card">
+                <div class="pair-header">Semifinal 1 - Pareja 1</div>
+                <select class="form-input" id="importSF1P1" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 1...</option>
+                </select>
+                <select class="form-input" style="margin-top: 0.5rem;" id="importSF1P2" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 2...</option>
+                </select>
+            </div>
+
+            <div class="pair-card">
+                <div class="pair-header">Semifinal 1 - Pareja 2</div>
+                <select class="form-input" id="importSF1P3" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 1...</option>
+                </select>
+                <select class="form-input" style="margin-top: 0.5rem;" id="importSF1P4" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 2...</option>
+                </select>
+            </div>
+
+            <!-- Semifinal 2 -->
+            <div class="pair-card">
+                <div class="pair-header">Semifinal 2 - Pareja 1</div>
+                <select class="form-input" id="importSF2P1" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 1...</option>
+                </select>
+                <select class="form-input" style="margin-top: 0.5rem;" id="importSF2P2" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 2...</option>
+                </select>
+            </div>
+
+            <div class="pair-card">
+                <div class="pair-header">Semifinal 2 - Pareja 2</div>
+                <select class="form-input" id="importSF2P3" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 1...</option>
+                </select>
+                <select class="form-input" style="margin-top: 0.5rem;" id="importSF2P4" onchange="updateImportPlayerSelections()">
+                    <option value="">Seleccionar jugador 2...</option>
+                </select>
+            </div>
+        </div>
+
+        <h4 style="margin: 2rem 0 1rem 0;">Resultados de Semifinales</h4>
+        
+        <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+            <h5 style="margin-bottom: 1rem; color: var(--primary);">Semifinal 1</h5>
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
+                <div>
+                    <label class="form-label">Sets Pareja 1</label>
+                    <input type="number" class="form-input" id="importSF1Sets1" min="0" max="2" placeholder="0" style="text-align: center;">
+                </div>
+                <div style="font-size: 2rem; color: var(--text-light);">-</div>
+                <div>
+                    <label class="form-label">Sets Pareja 2</label>
+                    <input type="number" class="form-input" id="importSF1Sets2" min="0" max="2" placeholder="0" style="text-align: center;">
+                </div>
+            </div>
+        </div>
+
+        <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem;">
+            <h5 style="margin-bottom: 1rem; color: var(--primary);">Semifinal 2</h5>
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
+                <div>
+                    <label class="form-label">Sets Pareja 1</label>
+                    <input type="number" class="form-input" id="importSF2Sets1" min="0" max="2" placeholder="0" style="text-align: center;">
+                </div>
+                <div style="font-size: 2rem; color: var(--text-light);">-</div>
+                <div>
+                    <label class="form-label">Sets Pareja 2</label>
+                    <input type="number" class="form-input" id="importSF2Sets2" min="0" max="2" placeholder="0" style="text-align: center;">
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-cancel" onclick="closeImportTournamentModal()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="finishImportTournament()">Importar Torneo</button>
+        </div>
+    </div>
+</div>    
+<div id="tournamentDetailsModal" class="modal">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
                 <h3 class="modal-title" id="tournamentDetailsTitle">Detalles del Torneo</h3>
@@ -5250,7 +5373,331 @@
         // ============================================
         // INITIALIZATION
         // ============================================
+// ============================================
+// IMPORT TOURNAMENT FUNCTIONALITY
+// ============================================
 
+function openImportTournamentModal() {
+    const season = appData.seasons[appData.currentSeason];
+    const activePlayers = season.players.filter(p => p.active);
+    
+    if (activePlayers.length < 8) {
+        alert('Necesitas al menos 8 jugadores activos para importar un torneo');
+        return;
+    }
+
+    // Poblar todos los selectores de jugadores
+    const playerSelects = [
+        'importSF1P1', 'importSF1P2', 'importSF1P3', 'importSF1P4',
+        'importSF2P1', 'importSF2P2', 'importSF2P3', 'importSF2P4'
+    ];
+
+    playerSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        let html = '<option value="">Seleccionar...</option>';
+        activePlayers.forEach(player => {
+            html += '<option value="' + player.id + '">' + player.name + '</option>';
+        });
+        select.innerHTML = html;
+    });
+
+    // Resetear campos
+    document.getElementById('importTournamentName').value = '';
+    document.getElementById('importTournamentDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('importTournamentType').value = 'cup';
+    document.getElementById('importSF1Sets1').value = '';
+    document.getElementById('importSF1Sets2').value = '';
+    document.getElementById('importSF2Sets1').value = '';
+    document.getElementById('importSF2Sets2').value = '';
+
+    document.getElementById('importTournamentModal').classList.add('active');
+}
+
+function closeImportTournamentModal() {
+    document.getElementById('importTournamentModal').classList.remove('active');
+}
+
+function updateImportPlayerSelections() {
+    // Esta función evita que se seleccione el mismo jugador dos veces
+    const selectedPlayers = [];
+    const playerSelects = [
+        'importSF1P1', 'importSF1P2', 'importSF1P3', 'importSF1P4',
+        'importSF2P1', 'importSF2P2', 'importSF2P3', 'importSF2P4'
+    ];
+
+    playerSelects.forEach(selectId => {
+        const value = document.getElementById(selectId).value;
+        if (value) selectedPlayers.push(value);
+    });
+
+    // Deshabilitar opciones ya seleccionadas en otros dropdowns
+    const season = appData.seasons[appData.currentSeason];
+    playerSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        const currentValue = select.value;
+        
+        Array.from(select.options).forEach(option => {
+            if (option.value && option.value !== currentValue) {
+                option.disabled = selectedPlayers.includes(option.value);
+            }
+        });
+    });
+}
+
+function finishImportTournament() {
+    const name = document.getElementById('importTournamentName').value.trim();
+    const date = document.getElementById('importTournamentDate').value;
+    const type = document.getElementById('importTournamentType').value;
+
+    if (!name || !date) {
+        alert('Por favor completa el nombre y fecha del torneo');
+        return;
+    }
+
+    // Obtener jugadores seleccionados
+    const players = {
+        sf1p1: document.getElementById('importSF1P1').value,
+        sf1p2: document.getElementById('importSF1P2').value,
+        sf1p3: document.getElementById('importSF1P3').value,
+        sf1p4: document.getElementById('importSF1P4').value,
+        sf2p1: document.getElementById('importSF2P1').value,
+        sf2p2: document.getElementById('importSF2P2').value,
+        sf2p3: document.getElementById('importSF2P3').value,
+        sf2p4: document.getElementById('importSF2P4').value
+    };
+
+    // Validar que todos los jugadores estén seleccionados
+    const allSelected = Object.values(players).every(p => p);
+    if (!allSelected) {
+        alert('Por favor selecciona todos los jugadores');
+        return;
+    }
+
+    // Validar que no haya duplicados
+    const uniquePlayers = new Set(Object.values(players));
+    if (uniquePlayers.size !== 8) {
+        alert('No puedes seleccionar el mismo jugador más de una vez');
+        return;
+    }
+
+    // Obtener resultados de semifinales
+    const sf1Sets1 = parseInt(document.getElementById('importSF1Sets1').value) || 0;
+    const sf1Sets2 = parseInt(document.getElementById('importSF1Sets2').value) || 0;
+    const sf2Sets1 = parseInt(document.getElementById('importSF2Sets1').value) || 0;
+    const sf2Sets2 = parseInt(document.getElementById('importSF2Sets2').value) || 0;
+
+    // Validar resultados de semifinales
+    if ((sf1Sets1 + sf1Sets2 !== 2 && sf1Sets1 + sf1Sets2 !== 3) ||
+        (sf2Sets1 + sf2Sets2 !== 2 && sf2Sets1 + sf2Sets2 !== 3)) {
+        alert('Los resultados de semifinales deben ser 2-0, 2-1, 0-2, o 1-2');
+        return;
+    }
+
+    showLoading('Importando torneo...');
+
+    setTimeout(() => {
+        const season = appData.seasons[appData.currentSeason];
+        
+        const weight = type === 'league' ? 1.0 : type === 'cup' ? 0.7 : 1.5;
+
+        const tournament = {
+            id: 't' + Date.now(),
+            name: name,
+            date: date,
+            type: type,
+            weight: weight,
+            rounds: 1,
+            status: 'active',
+            pairs: [],
+            matches: [],
+            penalties: [],
+            groups: [],
+            playoffs: null,
+            playoffsConfig: {
+                enabled: true,
+                qualified: 4
+            }
+        };
+
+        // Crear las 4 parejas
+        const pairIds = [];
+        
+        // Pareja 1 (SF1 - Pareja 1)
+        const pair1 = {
+            id: 'pair1',
+            name: season.players.find(p => p.id === players.sf1p1).name + ' - ' + 
+                  season.players.find(p => p.id === players.sf1p2).name,
+            players: [players.sf1p1, players.sf1p2],
+            points: 0,
+            played: 0,
+            won: 0,
+            lost: 0,
+            setsFor: 0,
+            setsAgainst: 0,
+            gamesFor: 0,
+            gamesAgainst: 0
+        };
+        tournament.pairs.push(pair1);
+        pairIds.push(pair1.id);
+
+        // Pareja 2 (SF1 - Pareja 2)
+        const pair2 = {
+            id: 'pair2',
+            name: season.players.find(p => p.id === players.sf1p3).name + ' - ' + 
+                  season.players.find(p => p.id === players.sf1p4).name,
+            players: [players.sf1p3, players.sf1p4],
+            points: 0,
+            played: 0,
+            won: 0,
+            lost: 0,
+            setsFor: 0,
+            setsAgainst: 0,
+            gamesFor: 0,
+            gamesAgainst: 0
+        };
+        tournament.pairs.push(pair2);
+        pairIds.push(pair2.id);
+
+        // Pareja 3 (SF2 - Pareja 1)
+        const pair3 = {
+            id: 'pair3',
+            name: season.players.find(p => p.id === players.sf2p1).name + ' - ' + 
+                  season.players.find(p => p.id === players.sf2p2).name,
+            players: [players.sf2p1, players.sf2p2],
+            points: 0,
+            played: 0,
+            won: 0,
+            lost: 0,
+            setsFor: 0,
+            setsAgainst: 0,
+            gamesFor: 0,
+            gamesAgainst: 0
+        };
+        tournament.pairs.push(pair3);
+        pairIds.push(pair3.id);
+
+        // Pareja 4 (SF2 - Pareja 2)
+        const pair4 = {
+            id: 'pair4',
+            name: season.players.find(p => p.id === players.sf2p3).name + ' - ' + 
+                  season.players.find(p => p.id === players.sf2p4).name,
+            players: [players.sf2p3, players.sf2p4],
+            points: 0,
+            played: 0,
+            won: 0,
+            lost: 0,
+            setsFor: 0,
+            setsAgainst: 0,
+            gamesFor: 0,
+            gamesAgainst: 0
+        };
+        tournament.pairs.push(pair4);
+        pairIds.push(pair4.id);
+
+        // Crear estructura de playoffs con semifinales ya jugadas
+        const playoffs = {
+            semifinals: [],
+            final: null,
+            thirdPlace: null
+        };
+
+        // Semifinal 1 (ya jugada)
+        const sf1Winner = sf1Sets1 > sf1Sets2 ? pair1.id : pair2.id;
+        const sf1Loser = sf1Winner === pair1.id ? pair2.id : pair1.id;
+        
+        playoffs.semifinals.push({
+            id: 'psf1',
+            name: 'Semifinal 1',
+            pair1: pair1.id,
+            pair2: pair2.id,
+            pair1Players: pair1.players,
+            pair2Players: pair2.players,
+            status: 'completed',
+            result: {
+                winner: sf1Winner,
+                loser: sf1Loser,
+                sets1: sf1Sets1,
+                sets2: sf1Sets2,
+                sets: [
+                    { team1: 6, team2: 0 },
+                    { team1: 6, team2: 0 }
+                ]
+            },
+            type: 'semifinal'
+        });
+
+        // Semifinal 2 (ya jugada)
+        const sf2Winner = sf2Sets1 > sf2Sets2 ? pair3.id : pair4.id;
+        const sf2Loser = sf2Winner === pair3.id ? pair4.id : pair3.id;
+        
+        playoffs.semifinals.push({
+            id: 'psf2',
+            name: 'Semifinal 2',
+            pair1: pair3.id,
+            pair2: pair4.id,
+            pair1Players: pair3.players,
+            pair2Players: pair4.players,
+            status: 'completed',
+            result: {
+                winner: sf2Winner,
+                loser: sf2Loser,
+                sets1: sf2Sets1,
+                sets2: sf2Sets2,
+                sets: [
+                    { team1: 6, team2: 0 },
+                    { team1: 6, team2: 0 }
+                ]
+            },
+            type: 'semifinal'
+        });
+
+        // Final (pendiente)
+        const sf1WinnerPair = tournament.pairs.find(p => p.id === sf1Winner);
+        const sf2WinnerPair = tournament.pairs.find(p => p.id === sf2Winner);
+        
+        playoffs.final = {
+            id: 'pf',
+            name: 'Final',
+            pair1: sf1Winner,
+            pair2: sf2Winner,
+            pair1Players: sf1WinnerPair.players,
+            pair2Players: sf2WinnerPair.players,
+            status: 'pending',
+            result: null,
+            type: 'final'
+        };
+
+        // Tercer lugar (pendiente)
+        const sf1LoserPair = tournament.pairs.find(p => p.id === sf1Loser);
+        const sf2LoserPair = tournament.pairs.find(p => p.id === sf2Loser);
+        
+        playoffs.thirdPlace = {
+            id: 'p3rd',
+            name: '3er Lugar',
+            pair1: sf1Loser,
+            pair2: sf2Loser,
+            pair1Players: sf1LoserPair.players,
+            pair2Players: sf2LoserPair.players,
+            status: 'pending',
+            result: null,
+            type: 'third_place'
+        };
+
+        tournament.playoffs = playoffs;
+
+        season.tournaments.push(tournament);
+        saveData(appData);
+
+        hideLoading();
+        closeImportTournamentModal();
+        showSection('playoffs');
+        populatePlayoffsTournamentSelect();
+        document.getElementById('playoffsTournamentSelect').value = tournament.id;
+        renderPlayoffs();
+
+        showNotification('Torneo importado correctamente. Ahora registra la final y el tercer lugar.', 'success');
+    }, 500);
+}
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Sistema de Liga de Pádel v2.1 inicializado');
             renderDashboard();
