@@ -4412,8 +4412,11 @@
             walkoverWinner.innerHTML += '<option value="' + pair1.id + '">' + pair1.name + '</option>';
             walkoverWinner.innerHTML += '<option value="' + pair2.id + '">' + pair2.name + '</option>';
 
-            resetMatchResultForm();
-            document.getElementById('matchResultModal').classList.add('active');
+           // Marcar que es un partido de playoff
+window.isPlayoffMatchModal = true;
+
+resetMatchResultForm();
+document.getElementById('matchResultModal').classList.add('active');
         }
 
         function savePlayoffMatchResult() {
@@ -4551,7 +4554,8 @@
             closeMatchResultModal();
             renderPlayoffs();
             
-            showNotification('Resultado de playoff registrado correctamente', 'success');
+            showNotification('Resultado de playoff registrado correctamente', 'success')
+            window.isPlayoffMatchModal = false;
         }
 
         function updatePlayoffBracket(tournament, completedMatch) {
