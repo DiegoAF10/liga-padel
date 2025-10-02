@@ -3470,12 +3470,14 @@
             toggleWalkoverMode();
         }
 
-        function closeMatchResultModal() {
-            document.getElementById('matchResultModal').classList.remove('active');
-            currentMatchId = null;
-            currentTournamentId = null;
-            isEditingMatch = false;
-        }
+      function closeMatchResultModal() {
+    document.getElementById('matchResultModal').classList.remove('active');
+    currentMatchId = null;
+    currentTournamentId = null;
+    isEditingMatch = false;
+    // NUEVO: Limpiar la marca de playoff
+    window.currentMatchIsPlayoff = false;
+}
 
         function toggleWalkoverMode() {
             const isWalkover = document.getElementById('isWalkover').checked;
@@ -4373,51 +4375,50 @@
             return html;
         }
 
-        function openPlayoffMatchModal(tournamentId, matchId) {
-            // Reuse the same match result modal
-            currentTournamentId = tournamentId;
-            currentMatchId = matchId;
-            isEditingMatch = false;
+     function openPlayoffMatchModal(tournamentId, matchId) {
+    currentTournamentId = tournamentId;
+    currentMatchId = matchId;
+    isEditingMatch = false;
+    
+    // NUEVO: Marcar que este es un partido de playoff
+    window.currentMatchIsPlayoff = true;
 
-            const season = appData.seasons[appData.currentSeason];
-            const tournament = season.tournaments.find(t => t.id === tournamentId);
-            
-            let match = null;
-            if (tournament.playoffs.preliminaries) {
-                match = tournament.playoffs.preliminaries.find(m => m.id === matchId);
-            }
-            if (!match && tournament.playoffs.semifinals) {
-                match = tournament.playoffs.semifinals.find(m => m.id === matchId);
-            }
-            if (!match && tournament.playoffs.final?.id === matchId) {
-                match = tournament.playoffs.final;
-            }
-            if (!match && tournament.playoffs.thirdPlace?.id === matchId) {
-                match = tournament.playoffs.thirdPlace;
-            }
+    const season = appData.seasons[appData.currentSeason];
+    const tournament = season.tournaments.find(t => t.id === tournamentId);
+    
+    let match = null;
+    if (tournament.playoffs.preliminaries) {
+        match = tournament.playoffs.preliminaries.find(m => m.id === matchId);
+    }
+    if (!match && tournament.playoffs.semifinals) {
+        match = tournament.playoffs.semifinals.find(m => m.id === matchId);
+    }
+    if (!match && tournament.playoffs.final?.id === matchId) {
+        match = tournament.playoffs.final;
+    }
+    if (!match && tournament.playoffs.thirdPlace?.id === matchId) {
+        match = tournament.playoffs.thirdPlace;
+    }
 
-            if (!match || !tournament) return;
+    if (!match || !tournament) return;
 
-            const pair1 = tournament.pairs.find(p => p.id === match.pair1);
-            const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+    const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+    const pair2 = tournament.pairs.find(p => p.id === match.pair2);
 
-            const matchInfo = document.getElementById('matchInfo');
-            matchInfo.innerHTML = '<div style="text-align: center; padding: 1rem; background: var(--bg-light); border-radius: 5px;">';
-            matchInfo.innerHTML += '<div style="font-weight: bold; color: var(--primary); margin-bottom: 0.5rem;">🏆 ' + match.name + '</div>';
-            matchInfo.innerHTML += '<strong>' + pair1.name + '</strong> vs <strong>' + pair2.name + '</strong>';
-            matchInfo.innerHTML += '</div>';
+    const matchInfo = document.getElementById('matchInfo');
+    matchInfo.innerHTML = '<div style="text-align: center; padding: 1rem; background: var(--bg-light); border-radius: 5px;">';
+    matchInfo.innerHTML += '<div style="font-weight: bold; color: var(--primary); margin-bottom: 0.5rem;">🏆 ' + match.name + '</div>';
+    matchInfo.innerHTML += '<strong>' + pair1.name + '</strong> vs <strong>' + pair2.name + '</strong>';
+    matchInfo.innerHTML += '</div>';
 
-            const walkoverWinner = document.getElementById('walkoverWinner');
-            walkoverWinner.innerHTML = '<option value="">Seleccionar...</option>';
-            walkoverWinner.innerHTML += '<option value="' + pair1.id + '">' + pair1.name + '</option>';
-            walkoverWinner.innerHTML += '<option value="' + pair2.id + '">' + pair2.name + '</option>';
+    const walkoverWinner = document.getElementById('walkoverWinner');
+    walkoverWinner.innerHTML = '<option value="">Seleccionar...</option>';
+    walkoverWinner.innerHTML += '<option value="' + pair1.id + '">' + pair1.name + '</option>';
+    walkoverWinner.innerHTML += '<option value="' + pair2.id + '">' + pair2.name + '</option>';
 
-           // Marcar que es un partido de playoff
-window.isPlayoffMatchModal = true;
-
-resetMatchResultForm();
-document.getElementById('matchResultModal').classList.add('active');
-        }
+    resetMatchResultForm();
+    document.getElementById('matchResultModal').classList.add('active');
+}
 
         function savePlayoffMatchResult() {
             const isWalkover = document.getElementById('isWalkover').checked;
@@ -4647,6 +4648,8 @@ document.getElementById('matchResultModal').classList.add('active');
                 const fourth = tournament.pairs.find(p => p.id === playoffs.thirdPlace.result.loser);
                 third.finalPosition = 3;
                 fourth.finalPosition = 4;
+// Recalcular rankings después de finalizar el torneo
+    recalculateAllRankings();
             }
 
             // Assign remaining positions based on playoff format
@@ -4710,27 +4713,192 @@ document.getElementById('matchResultModal').classList.add('active');
             showNotification('¡Torneo completado! Campeón: ' + champion.name, 'success');
         }
 
-        // Override saveMatchResult to handle playoff matches - CORRECCIÓN APLICADA
-        const originalSaveMatchResult = saveMatchResult;
-        saveMatchResult = function() {
-            const season = appData.seasons[appData.currentSeason];
-            const tournament = season.tournaments.find(t => t.id === currentTournamentId);
-            
-            if (tournament && tournament.playoffs) {
-                // CORRECCIÓN: Incluir preliminaries en la verificación
-                const isPlayoffMatch = (tournament.playoffs.preliminaries && tournament.playoffs.preliminaries.some(m => m.id === currentMatchId)) ||
-                                      (tournament.playoffs.semifinals && tournament.playoffs.semifinals.some(m => m.id === currentMatchId)) ||
-                                      tournament.playoffs.final?.id === currentMatchId ||
-                                      tournament.playoffs.thirdPlace?.id === currentMatchId;
-                
-                if (isPlayoffMatch) {
-                    savePlayoffMatchResult();
-                    return;
-                }
-            }
-            
-            originalSaveMatchResult();
+       function saveMatchResult() {
+    // NUEVO: Verificar si es partido de playoff usando la variable global
+    if (window.currentMatchIsPlayoff === true) {
+        savePlayoffMatchResult();
+        return;
+    }
+    
+    // Código normal para partidos regulares
+    const isWalkover = document.getElementById('isWalkover').checked;
+    const errorDiv = document.getElementById('matchResultError');
+    errorDiv.style.display = 'none';
+
+    const season = appData.seasons[appData.currentSeason];
+    const tournament = season.tournaments.find(t => t.id === currentTournamentId);
+    const match = tournament.matches.find(m => m.id === currentMatchId);
+
+    if (!match || !tournament) return;
+
+    // If editing, revert previous stats first
+    if (isEditingMatch && match.status !== 'pending') {
+        revertMatchStats(tournament, match);
+    }
+
+    if (isWalkover) {
+        const winnerId = document.getElementById('walkoverWinner').value;
+        const reason = document.getElementById('walkoverReason').value;
+        const customReason = document.getElementById('customReason').value;
+
+        if (!winnerId || !reason) {
+            alert('Por favor completa todos los campos requeridos');
+            return;
+        }
+
+        const loserId = winnerId === match.pair1 ? match.pair2 : match.pair1;
+        const loserPair = tournament.pairs.find(p => p.id === loserId);
+
+        match.status = 'walkover';
+        match.walkoverReason = reason === 'other' ? customReason : reason;
+        match.result = {
+            winner: winnerId,
+            loser: loserId,
+            sets1: winnerId === match.pair1 ? 2 : 0,
+            sets2: winnerId === match.pair2 ? 2 : 0,
+            sets: [
+                { team1: winnerId === match.pair1 ? 6 : 0, team2: winnerId === match.pair2 ? 6 : 0 },
+                { team1: winnerId === match.pair1 ? 6 : 0, team2: winnerId === match.pair2 ? 6 : 0 }
+            ],
+            isWalkover: true
         };
+
+        let penaltyPoints = 0;
+        if (reason === 'late_5_14') {
+            penaltyPoints = -2;
+        } else if (reason === 'late_15_plus' || reason === 'no_show') {
+            penaltyPoints = -3;
+        }
+
+        if (penaltyPoints !== 0) {
+            loserPair.points += penaltyPoints;
+            
+            if (!tournament.penalties) tournament.penalties = [];
+            tournament.penalties.push({
+                pairId: loserId,
+                playerId: null,
+                points: Math.abs(penaltyPoints),
+                reason: match.walkoverReason,
+                date: new Date().toISOString(),
+                matchId: match.id
+            });
+        }
+
+        const winnerPair = tournament.pairs.find(p => p.id === winnerId);
+        winnerPair.played += 1;
+        winnerPair.won += 1;
+        winnerPair.points += 3;
+        winnerPair.setsFor += 2;
+
+        loserPair.played += 1;
+        loserPair.lost += 1;
+        loserPair.setsAgainst += 2;
+
+    } else {
+        const isIncomplete = document.getElementById('isIncompleteMatch').checked;
+        const set1_1 = document.getElementById('set1Team1').value;
+        const set1_2 = document.getElementById('set1Team2').value;
+        const set2_1 = document.getElementById('set2Team1').value;
+        const set2_2 = document.getElementById('set2Team2').value;
+        const set3_1 = document.getElementById('set3Team1').value;
+        const set3_2 = document.getElementById('set3Team2').value;
+
+        if (!set1_1 || !set1_2 || !set2_1 || !set2_2) {
+            errorDiv.textContent = 'Los primeros dos sets son obligatorios';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (!validateTennisScore(set1_1, set1_2, isIncomplete)) {
+            errorDiv.textContent = 'Set 1: Marcador inválido de tenis';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (!validateTennisScore(set2_1, set2_2, isIncomplete)) {
+            errorDiv.textContent = 'Set 2: Marcador inválido de tenis';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if ((set3_1 || set3_2) && !validateTennisScore(set3_1, set3_2, isIncomplete)) {
+            errorDiv.textContent = 'Set 3: Marcador inválido de tenis';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        const sets = [
+            { team1: parseInt(set1_1), team2: parseInt(set1_2) },
+            { team1: parseInt(set2_1), team2: parseInt(set2_2) }
+        ];
+
+        if (set3_1 && set3_2) {
+            sets.push({ team1: parseInt(set3_1), team2: parseInt(set3_2) });
+        }
+
+        let setsTeam1 = 0;
+        let setsTeam2 = 0;
+        let gamesTeam1 = 0;
+        let gamesTeam2 = 0;
+
+        sets.forEach(set => {
+            if (set.team1 > set.team2) setsTeam1++;
+            else if (set.team2 > set.team1) setsTeam2++;
+            gamesTeam1 += set.team1;
+            gamesTeam2 += set.team2;
+        });
+
+        const winner = setsTeam1 > setsTeam2 ? match.pair1 : match.pair2;
+        const loser = winner === match.pair1 ? match.pair2 : match.pair1;
+
+        match.status = 'completed';
+        match.winner = winner;
+        match.result = {
+            winner: winner,
+            loser: loser,
+            sets1: setsTeam1,
+            sets2: setsTeam2,
+            games1: gamesTeam1,
+            games2: gamesTeam2,
+            sets: sets,
+            isIncomplete: isIncomplete
+        };
+
+        const pair1 = tournament.pairs.find(p => p.id === match.pair1);
+        const pair2 = tournament.pairs.find(p => p.id === match.pair2);
+
+        pair1.played += 1;
+        pair2.played += 1;
+
+        if (winner === match.pair1) {
+            pair1.won += 1;
+            pair1.points += 3;
+            pair2.lost += 1;
+        } else {
+            pair2.won += 1;
+            pair2.points += 3;
+            pair1.lost += 1;
+        }
+
+        pair1.setsFor += setsTeam1;
+        pair1.setsAgainst += setsTeam2;
+        pair1.gamesFor += gamesTeam1;
+        pair1.gamesAgainst += gamesTeam2;
+
+        pair2.setsFor += setsTeam2;
+        pair2.setsAgainst += setsTeam1;
+        pair2.gamesFor += gamesTeam2;
+        pair2.gamesAgainst += gamesTeam1;
+    }
+
+    saveData(appData);
+    closeMatchResultModal();
+    renderCalendar();
+    renderStandings();
+    
+    const action = isEditingMatch ? 'actualizado' : 'registrado';
+    showNotification('Resultado ' + action + ' correctamente', 'success');
+}
 
         // ============================================
         // RANKING SYSTEM
